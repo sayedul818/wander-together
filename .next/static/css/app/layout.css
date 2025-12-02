@@ -839,6 +839,9 @@ video {
 .h-px {
   height: 1px;
 }
+.h-56 {
+  height: 14rem;
+}
 .min-h-\[100px\] {
   min-height: 100px;
 }
