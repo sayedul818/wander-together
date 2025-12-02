@@ -1,0 +1,227 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
+import { Users, MapPin, TrendingUp, LogOut, Loader2, ArrowLeft } from 'lucide-react';
+import { toast } from 'sonner';
+
+interface DashboardStats {
+  totalUsers: number;
+  totalTrips: number;
+  premiumUsers: number;
+  activeTrips: number;
+}
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
+export default function AdminDashboard() {
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Check session
+        const sessionRes = await fetch('/api/auth/session');
+        if (!sessionRes.ok) {
+          router.push('/login');
+          return;
+        }
+        const sessionData = await sessionRes.json();
+        
+        // Check if admin
+        if (sessionData.user.role !== 'admin') {
+          router.push('/dashboard');
+          return;
+        }
+
+        setUser(sessionData.user);
+
+        // Fetch stats
+        const statsRes = await fetch('/api/admin/stats');
+        if (statsRes.ok) {
+          const statsData = await statsRes.json();
+          setStats(statsData);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        router.push('/login');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [router]);
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      router.push('/');
+    } catch (error) {
+      toast.error('Logout failed');
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+      </div>
+    );
+  }
+
+  if (!user || user.role !== 'admin') {
+    return null;
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div>
+            <Link href="/" className="flex items-center gap-2 text-orange-500 hover:text-orange-600 mb-2">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Home
+            </Link>
+            <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="text-gray-700 font-medium">{user.name}</span>
+            <Button
+              variant="ghost"
+              onClick={handleLogout}
+              className="text-red-500 hover:text-red-700"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-12">
+        {/* Stats Grid */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="grid md:grid-cols-4 gap-6 mb-12"
+        >
+          {/* Total Users */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm font-medium">Total Users</p>
+                <p className="text-3xl font-bold text-gray-900 mt-2">
+                  {stats?.totalUsers || 0}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Users className="h-6 w-6 text-blue-600" />
+              </div>
+            </div>
+          </div>
+
+          {/* Premium Users */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm font-medium">Premium Users</p>
+                <p className="text-3xl font-bold text-gray-900 mt-2">
+                  {stats?.premiumUsers || 0}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                <TrendingUp className="h-6 w-6 text-yellow-600" />
+              </div>
+            </div>
+          </div>
+
+          {/* Total Trips */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm font-medium">Total Trips</p>
+                <p className="text-3xl font-bold text-gray-900 mt-2">
+                  {stats?.totalTrips || 0}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <MapPin className="h-6 w-6 text-green-600" />
+              </div>
+            </div>
+          </div>
+
+          {/* Active Trips */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm font-medium">Active Trips</p>
+                <p className="text-3xl font-bold text-gray-900 mt-2">
+                  {stats?.activeTrips || 0}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                <MapPin className="h-6 w-6 text-orange-600" />
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Management Sections */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="grid md:grid-cols-2 gap-6"
+        >
+          {/* Users Management */}
+          <Link href="/admin/users">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 hover:shadow-md transition cursor-pointer">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <Users className="h-6 w-6 text-blue-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900">Users Management</h3>
+              </div>
+              <p className="text-gray-600 mb-4">
+                View, manage, and moderate user accounts. Update roles and permissions.
+              </p>
+              <Button className="gradient-sunset text-white">
+                Manage Users →
+              </Button>
+            </div>
+          </Link>
+
+          {/* Trips Management */}
+          <Link href="/admin/trips">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 hover:shadow-md transition cursor-pointer">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                  <MapPin className="h-6 w-6 text-green-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900">Trips Management</h3>
+              </div>
+              <p className="text-gray-600 mb-4">
+                View all trips, monitor activity, and remove inappropriate content.
+              </p>
+              <Button className="gradient-sunset text-white">
+                Manage Trips →
+              </Button>
+            </div>
+          </Link>
+        </motion.div>
+      </div>
+    </div>
+  );
+}
