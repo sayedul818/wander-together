@@ -26,11 +26,15 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10');
     const skip = (page - 1) * limit;
 
-    // Filter by creator if ?creator= is provided
+    // Filter by creator or participant if provided
     const creator = searchParams.get('creator');
+    const participant = searchParams.get('participant');
     const filter: any = { status: { $ne: 'cancelled' } };
     if (creator) {
       filter.creator = creator;
+    }
+    if (participant) {
+      filter.participants = participant;
     }
 
     const plans = await TravelPlan.find(filter)
@@ -65,6 +69,21 @@ export async function POST(req: NextRequest) {
     const data = createPlanSchema.parse(body);
 
     await connectDB();
+
+    // Fetch user to check premium status
+    const User = (await import('@/models/User')).default;
+    const user = await User.findById(session.userId);
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    if (!user.isPremium) {
+      // Count how many plans this user has created
+      const userPlanCount = await TravelPlan.countDocuments({ creator: session.userId });
+      if (userPlanCount >= 3) {
+        return NextResponse.json({ error: 'Free users can only create up to 3 trip plans. Upgrade to premium for unlimited plans.' }, { status: 403 });
+      }
+    }
 
     const plan = await TravelPlan.create({
       ...data,

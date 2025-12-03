@@ -147,7 +147,7 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-gray-600">
+          {/* <div className="mt-6 text-center text-sm text-gray-600">
             <p className="font-medium mb-2">Demo accounts:</p>
             <p className="mb-1">
               <strong>User:</strong> user@example.com / user123
@@ -155,7 +155,7 @@ export default function LoginPage() {
             <p>
               <strong>Admin:</strong> admin@travelbuddy.com / admin123
             </p>
-          </div>
+          </div> */}
         </motion.div>
       </div>
 

@@ -17,6 +17,8 @@ interface TravelPlan {
   maxParticipants: number;
   interests: string[];
   status: string;
+  creator?: string;
+  participants?: string[];
 }
 
 interface User {
@@ -24,39 +26,60 @@ interface User {
   name: string;
   email: string;
   role: string;
+  isPremium?: boolean;
 }
 
 export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [plans, setPlans] = useState<TravelPlan[]>([]);
+  const [joinedPlans, setJoinedPlans] = useState<TravelPlan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  // Show 'Unlimited' for premium, 3 for free users
+  const MAX_FREE_TRIP_PLANS = 3;
+  const MAX_FREE_JOINED_TRIPS = 3;
+  const isPremium = !!user && user.isPremium === true;
+  const creditsLeft = isPremium ? 'Unlimited' : (user ? MAX_FREE_TRIP_PLANS - plans.length : null);
+  const joinCreditsLeft = isPremium ? 'Unlimited' : (user ? MAX_FREE_JOINED_TRIPS - joinedPlans.length : null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         // Fetch session
-          const sessionRes = await fetch('/api/auth/session', { credentials: 'include' });
+        const sessionRes = await fetch('/api/auth/session', { credentials: 'include' });
         if (!sessionRes.ok) {
           router.push('/login');
           return;
         }
         const sessionData = await sessionRes.json();
-          if (!sessionData.user) {
-            router.push('/login');
-            return;
-          }
-          setUser(sessionData.user);
+        if (!sessionData.user) {
+          router.push('/login');
+          return;
+        }
+        setUser(sessionData.user);
 
-        // Fetch only the logged-in user's travel plans
+        // Fetch created and joined trips
         if (sessionData.user && sessionData.user.id) {
-          const plansRes = await fetch(`/api/travel-plans?creator=${sessionData.user.id}`);
-          if (plansRes.ok) {
-            const plansData = await plansRes.json();
-            setPlans(plansData.plans || []);
+          const [createdRes, joinedRes] = await Promise.all([
+            fetch(`/api/travel-plans?creator=${sessionData.user.id}`),
+            fetch(`/api/travel-plans?participant=${sessionData.user.id}`),
+          ]);
+          if (createdRes.ok) {
+            const createdData = await createdRes.json();
+            setPlans(createdData.plans || []);
+          } else {
+            setPlans([]);
+          }
+          if (joinedRes.ok) {
+            const joinedData = await joinedRes.json();
+            // Exclude trips where user is the creator (avoid duplicates)
+            setJoinedPlans((joinedData.plans || []).filter((plan: TravelPlan) => plan.creator !== sessionData.user.id));
+          } else {
+            setJoinedPlans([]);
           }
         } else {
           setPlans([]);
+          setJoinedPlans([]);
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -91,12 +114,24 @@ export default function DashboardPage() {
         <p className="text-gray-600 mb-6">
           Plan your next adventure and connect with fellow travelers.
         </p>
-        <Link href="/travel-plans/add">
-          <Button className="gradient-sunset text-white">
-            <Plus className="h-4 w-4 mr-2" />
-            Create New Trip
-          </Button>
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link href="/travel-plans/add">
+            <Button className="gradient-sunset text-white">
+              <Plus className="h-4 w-4 mr-2" />
+              Create New Trip
+            </Button>
+          </Link>
+          {user && (
+            <>
+              <div className="bg-white border border-orange-200 rounded px-4 py-2 text-orange-700 font-semibold text-sm shadow">
+                Trip Plan Credits: <span className={creditsLeft === 0 ? 'text-red-600' : 'text-orange-600'}>{creditsLeft}</span>{!isPremium && ` / ${MAX_FREE_TRIP_PLANS}`}
+              </div>
+              <div className="bg-white border border-blue-200 rounded px-4 py-2 text-blue-700 font-semibold text-sm shadow">
+                Join Trip Credits: <span className={joinCreditsLeft === 0 ? 'text-red-600' : 'text-blue-600'}>{joinCreditsLeft}</span>{!isPremium && ` / ${MAX_FREE_JOINED_TRIPS}`}
+              </div>
+            </>
+          )}
+        </div>
       </motion.div>
 
       {/* Stats Section */}
@@ -121,7 +156,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Recent Trips Section */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-12">
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-2xl font-bold text-gray-900">Your Trips</h2>
         </div>
@@ -140,6 +175,7 @@ export default function DashboardPage() {
                 key={plan._id}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
+                transition={{ duration: 0.15 }}
                 className="p-6 hover:bg-gray-50 transition cursor-pointer"
                 onClick={() => router.push(`/travel-plans/${plan._id}`)}
               >
@@ -168,6 +204,63 @@ export default function DashboardPage() {
                   <div className="flex gap-1">
                     {plan.interests.slice(0, 2).map((interest) => (
                       <span key={interest} className="bg-orange-100 text-orange-700 px-2 py-1 rounded text-xs">
+                        {interest}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Joined Tours Section */}
+      <div className="bg-white rounded-lg shadow-sm border border-blue-200">
+        <div className="p-6 border-b border-blue-200">
+          <h2 className="text-2xl font-bold text-blue-900">Tours You've Joined</h2>
+        </div>
+        <div className="divide-y">
+          {joinedPlans.length === 0 ? (
+            <div className="p-12 text-center">
+              <MapPin className="h-12 w-12 text-blue-200 mx-auto mb-4" />
+              <p className="text-blue-600">You haven't joined any tours yet.</p>
+            </div>
+          ) : (
+            joinedPlans.map((plan) => (
+              <motion.div
+                key={plan._id}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.15 }}
+                className="p-6 hover:bg-blue-50 transition cursor-pointer"
+                onClick={() => router.push(`/travel-plans/${plan._id}`)}
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-blue-900">{plan.title}</h3>
+                    <p className="text-blue-600">{plan.destination}</p>
+                  </div>
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                    plan.status === 'planning' ? 'bg-blue-100 text-blue-700' :
+                    plan.status === 'confirmed' ? 'bg-green-100 text-green-700' :
+                    'bg-gray-100 text-gray-700'
+                  }`}>
+                    {plan.status.charAt(0).toUpperCase() + plan.status.slice(1)}
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-4 text-sm text-blue-700">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    {new Date(plan.startDate).toLocaleDateString()}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    {plan.currentParticipants}/{plan.maxParticipants}
+                  </div>
+                  <div className="flex gap-1">
+                    {plan.interests.slice(0, 2).map((interest) => (
+                      <span key={interest} className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">
                         {interest}
                       </span>
                     ))}

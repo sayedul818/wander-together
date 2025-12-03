@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,37 +18,89 @@ interface TravelPlan {
   currentParticipants: number;
   maxParticipants: number;
   interests: string[];
-  creator: { name: string; avatar?: string };
+  creator: { name: string; avatar?: string; _id?: string };
   status: string;
+  participants?: string[];
 }
-
 export default function ExplorePage() {
   const router = useRouter();
   const [plans, setPlans] = useState<TravelPlan[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [joiningId, setJoiningId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  // Join trip handler
+  const handleJoin = async (planId: string) => {
+    setJoiningId(planId);
+    try {
+      const response = await fetch(`/api/travel-plans/${planId}/join`, {
+        method: 'POST',
+      });
+      if (response.ok) {
+        toast.success('You have joined this trip!');
+        const data = await response.json();
+        // Update the plan in state with new participants and currentParticipants
+        setPlans((prev) =>
+          prev.map((plan) =>
+            plan._id === planId
+              ? {
+                  ...plan,
+                  currentParticipants: data.plan.currentParticipants,
+                  participants: Array.isArray(data.plan.participants)
+                    ? data.plan.participants.map((p: any) => p._id || p) // handle both populated and id
+                    : [],
+                }
+              : plan
+          )
+        );
+      } else {
+        const error = await response.json();
+        toast.error(error.error || 'Failed to join trip');
+      }
+    } catch (error) {
+      toast.error('An error occurred. Please try again.');
+    } finally {
+      setJoiningId(null);
+    }
+  };
 
   useEffect(() => {
-    const fetchPlans = async () => {
+    // Fetch user session and plans in parallel
+    const fetchData = async () => {
       try {
-        const res = await fetch('/api/travel-plans');
-        if (res.ok) {
-          const data = await res.json();
-          setPlans(data.plans || []);
+        const [userRes, plansRes] = await Promise.all([
+          fetch('/api/auth/session'),
+          fetch('/api/travel-plans?limit=1000'),
+        ]);
+        if (userRes.ok) {
+          const userData = await userRes.json();
+          setUserId(userData.user?.id || null);
+        }
+        if (plansRes.ok) {
+          const data = await plansRes.json();
+          // Always map participants to array of IDs for consistent checking
+          setPlans(
+            (data.plans || []).map((plan: any) => ({
+              ...plan,
+              participants: Array.isArray(plan.participants)
+                ? plan.participants.map((p: any) => p._id || p)
+                : [],
+            }))
+          );
         }
       } catch (error) {
-        console.error('Error fetching plans:', error);
+        console.error('Error fetching data:', error);
       } finally {
         setIsLoading(false);
       }
     };
-
-    fetchPlans();
+    fetchData();
   }, []);
 
-  // Only show plans with a valid creator
+  // Show all trips except those with creator name 'Unknown'
   const filteredPlans = plans
-    .filter(plan => plan.creator && plan.creator.name && plan.creator.name !== 'Unknown')
+    .filter(plan => plan.creator && plan.creator.name !== 'Unknown')
+    .filter(plan => !userId || (plan.creator && plan.creator._id !== userId))
     .filter(plan =>
       plan.destination.toLowerCase().includes(searchQuery.toLowerCase()) ||
       plan.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -148,7 +201,23 @@ export default function ExplorePage() {
                   <div className="text-sm text-gray-600">
                     by <span className="font-medium">{plan.creator?.name || "Unknown"}</span>
                   </div>
-                  <Button size="sm" className="gradient-sunset text-white">Join</Button>
+                  {userId && plan.participants && plan.participants.includes(userId) ? (
+                    <Button size="sm" className="gradient-sunset text-white" disabled>
+                      Already Joined
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      className="gradient-sunset text-white"
+                      disabled={joiningId === plan._id}
+                      onClick={e => {
+                        e.stopPropagation();
+                        handleJoin(plan._id);
+                      }}
+                    >
+                      {joiningId === plan._id ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Join'}
+                    </Button>
+                  )}
                 </div>
               </div>
             </motion.div>

@@ -31,7 +31,7 @@ export async function POST(
 
     // Check if already a participant
     const userObjectId = new mongoose.Types.ObjectId(session.userId);
-    if (plan.participants.includes(userObjectId)) {
+    if (plan.participants.some((id: mongoose.Types.ObjectId) => id.equals(userObjectId))) {
       return NextResponse.json(
         { error: 'You are already a participant in this trip' },
         { status: 400 }
@@ -44,6 +44,26 @@ export async function POST(
         { error: 'This trip is full' },
         { status: 400 }
       );
+    }
+
+    // Fetch user and enforce join limit for non-premium
+    const User = (await import('@/models/User')).default;
+    const user = await User.findById(session.userId);
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+    if (!user.isPremium) {
+      // Count how many trips user has joined (not created)
+      const joinedCount = await TravelPlan.countDocuments({
+        participants: userObjectId,
+        creator: { $ne: userObjectId },
+      });
+      if (joinedCount >= 3) {
+        return NextResponse.json(
+          { error: 'Free users can only join up to 3 trips. Upgrade to premium for unlimited joins.' },
+          { status: 403 }
+        );
+      }
     }
 
     // Add user to participants
