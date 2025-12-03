@@ -1,15 +1,10 @@
 {
+  "/_not-found/page": "app/_not-found/page.js",
+  "/page": "app/page.js",
+  "/matchmaking/page": "app/matchmaking/page.js",
   "/api/auth/session/route": "app/api/auth/session/route.js",
   "/api/travel-plans/route": "app/api/travel-plans/route.js",
-  "/api/travel-plans/[id]/route": "app/api/travel-plans/[id]/route.js",
-  "/api/admin/stats/route": "app/api/admin/stats/route.js",
-  "/api/admin/users/route": "app/api/admin/users/route.js",
-  "/page": "app/page.js",
-  "/api/reviews/route": "app/api/reviews/route.js",
   "/(protected)/dashboard/page": "app/(protected)/dashboard/page.js",
   "/(protected)/explore/page": "app/(protected)/explore/page.js",
-  "/(protected)/travel-plans/[id]/page": "app/(protected)/travel-plans/[id]/page.js",
-  "/(protected)/admin/page": "app/(protected)/admin/page.js",
-  "/(protected)/admin/users/page": "app/(protected)/admin/users/page.js",
-  "/(protected)/profile/page": "app/(protected)/profile/page.js"
+  "/(protected)/travel-plans/[id]/page": "app/(protected)/travel-plans/[id]/page.js"
 }
