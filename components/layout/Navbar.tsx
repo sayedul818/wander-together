@@ -105,7 +105,7 @@ export function Navbar() {
     {
       title: 'Services',
       items: [
-        { label: 'Best matches', href: '/matchmaking', icon: Sparkles },
+        ...(user ? [{ label: 'Best matches', href: '/matchmaking', icon: Sparkles }] : []),
         { label: 'Premium perks', href: '/pricing', icon: Gift },
         { label: 'Safety center', href: '/about/safety', icon: ShieldCheck },
       ],

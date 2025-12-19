@@ -6,7 +6,7 @@ import TravelPlan from '@/models/TravelPlan';
 export async function GET() {
   try {
     await dbConnect();
-    const trips = await TravelPlan.find({});
+    const trips = await TravelPlan.find({}).populate('creator', 'name email');
     return NextResponse.json({ trips });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch trips', details: error?.message }, { status: 500 });

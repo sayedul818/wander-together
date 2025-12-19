@@ -96,7 +96,7 @@ export default function AdminTripsPage() {
 
   const filteredTrips = trips
     .filter((trip) =>
-      `${trip.title} ${trip.destination} ${trip.creator.name} ${trip.creator.email}`
+      `${trip.title} ${trip.destination} ${trip.creator?.name || ''} ${trip.creator?.email || ''}`
         .toLowerCase()
         .includes(search.toLowerCase())
     )
@@ -204,8 +204,14 @@ export default function AdminTripsPage() {
                 {/* Creator */}
                 <div className="mb-4 pb-4 border-b border-border">
                   <p className="text-xs text-muted-foreground font-medium mb-1">Created by:</p>
-                  <p className="text-sm text-foreground">{trip.creator.name}</p>
-                  <p className="text-xs text-muted-foreground">{trip.creator.email}</p>
+                  {trip.creator ? (
+                    <>
+                      <p className="text-sm text-foreground">{trip.creator.name}</p>
+                      <p className="text-xs text-muted-foreground">{trip.creator.email}</p>
+                    </>
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic">Unknown (user deleted)</p>
+                  )}
                 </div>
 
                 {/* Action */}
