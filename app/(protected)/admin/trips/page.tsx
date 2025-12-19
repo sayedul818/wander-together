@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { Loader2, ArrowLeft, Trash2, MapPin, Users, Calendar, Search, Filter } from 'lucide-react';
 import { toast } from 'sonner';
+import Image from 'next/image';
 
 interface TripRow {
   _id: string;
@@ -17,7 +18,8 @@ interface TripRow {
   currentParticipants: number;
   maxParticipants: number;
   status: string;
-  creator: { name: string; email: string };
+  image?: string;
+  creator: { name: string; email: string; avatar?: string };
 }
 
 export default function AdminTripsPage() {
@@ -173,8 +175,17 @@ export default function AdminTripsPage() {
               className="card-surface rounded-lg shadow-sm border border-border overflow-hidden"
             >
               {/* Header */}
-              <div className="h-32 bg-gradient-to-br from-orange-300 to-pink-300 flex items-center justify-center relative">
-                <MapPin className="h-8 w-8 text-white/50" />
+              <div className="h-32 bg-gradient-to-br from-orange-300 to-pink-300 flex items-center justify-center relative overflow-hidden">
+                {trip.image ? (
+                  <Image 
+                    src={trip.image} 
+                    alt={trip.title}
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <MapPin className="h-8 w-8 text-white/50" />
+                )}
                 <span className={`absolute top-2 right-2 px-2 py-1 rounded text-xs font-semibold ${
                   trip.status === 'planning' ? 'bg-blue-500' :
                   trip.status === 'confirmed' ? 'bg-green-500' :
@@ -203,12 +214,27 @@ export default function AdminTripsPage() {
 
                 {/* Creator */}
                 <div className="mb-4 pb-4 border-b border-border">
-                  <p className="text-xs text-muted-foreground font-medium mb-1">Created by:</p>
+                  <p className="text-xs text-muted-foreground font-medium mb-2">Created by:</p>
                   {trip.creator ? (
-                    <>
-                      <p className="text-sm text-foreground">{trip.creator.name}</p>
-                      <p className="text-xs text-muted-foreground">{trip.creator.email}</p>
-                    </>
+                    <div className="flex items-center gap-2">
+                      {trip.creator.avatar ? (
+                        <Image 
+                          src={trip.creator.avatar} 
+                          alt={trip.creator.name}
+                          width={32}
+                          height={32}
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-300 to-pink-300 flex items-center justify-center text-white font-bold text-xs">
+                          {trip.creator.name?.charAt(0).toUpperCase() || "?"}
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-sm text-foreground">{trip.creator.name}</p>
+                        <p className="text-xs text-muted-foreground">{trip.creator.email}</p>
+                      </div>
+                    </div>
                   ) : (
                     <p className="text-sm text-muted-foreground italic">Unknown (user deleted)</p>
                   )}

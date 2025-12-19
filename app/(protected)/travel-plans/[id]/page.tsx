@@ -4,10 +4,12 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { Calendar, Users, MapPin, DollarSign, ArrowLeft, Loader2, Heart, Share2, MessageCircle } from 'lucide-react';
+import { Calendar, Users, MapPin, DollarSign, ArrowLeft, Loader2, Heart, Share2, MessageCircle, Star } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import Image from 'next/image';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
 
 interface TravelPlan {
   _id: string;
@@ -36,6 +38,16 @@ interface User {
   role: string;
 }
 
+interface Review {
+  _id: string;
+  author: { _id: string; name: string; avatar?: string };
+  target: { _id: string; name: string; avatar?: string };
+  travelPlan?: { _id: string; title: string };
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
+
 export default function TravelPlanDetailsPage() {
   const router = useRouter();
   const params = useParams();
@@ -45,6 +57,15 @@ export default function TravelPlanDetailsPage() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isJoining, setIsJoining] = useState(false);
+  
+  // Reviews state
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [isLoadingReviews, setIsLoadingReviews] = useState(true);
+  const [newRating, setNewRating] = useState(5);
+  const [newComment, setNewComment] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [averageRating, setAverageRating] = useState(0);
+  const [totalReviews, setTotalReviews] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -61,6 +82,11 @@ export default function TravelPlanDetailsPage() {
         if (planRes.ok) {
           const planData = await planRes.json();
           setPlan(planData.plan);
+          
+          // Fetch reviews for the creator
+          if (planData.plan?.creator?._id) {
+            fetchReviews(planData.plan.creator._id);
+          }
         } else if (planRes.status === 404) {
           toast.error('Trip not found');
           router.push('/explore');
@@ -77,6 +103,74 @@ export default function TravelPlanDetailsPage() {
       fetchData();
     }
   }, [planId, router]);
+
+  const fetchReviews = async (creatorId: string) => {
+    try {
+      setIsLoadingReviews(true);
+      const res = await fetch(`/api/reviews?target=${creatorId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setReviews(data.reviews || []);
+        
+        // Calculate average rating
+        if (data.reviews && data.reviews.length > 0) {
+          const total = data.reviews.reduce((sum: number, review: Review) => sum + review.rating, 0);
+          setAverageRating(total / data.reviews.length);
+          setTotalReviews(data.reviews.length);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+    } finally {
+      setIsLoadingReviews(false);
+    }
+  };
+
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
+    if (!newComment.trim()) {
+      toast.error('Please enter a comment');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const res = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          target: plan?.creator._id,
+          rating: newRating,
+          comment: newComment,
+          travelPlan: planId
+        })
+      });
+
+      if (res.ok) {
+        toast.success('Review submitted successfully!');
+        setNewComment('');
+        setNewRating(5);
+        // Refresh reviews
+        if (plan?.creator._id) {
+          fetchReviews(plan.creator._id);
+        }
+      } else {
+        const error = await res.json();
+        toast.error(error.error || 'Failed to submit review');
+      }
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      toast.error('An error occurred. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleJoin = async () => {
     if (!user) {
@@ -253,9 +347,31 @@ export default function TravelPlanDetailsPage() {
           <div className="card-surface rounded-lg p-6 mb-8">
             <h2 className="text-2xl font-bold text-foreground mb-4">Trip Creator</h2>
             <div className="flex items-center justify-between">
-              <div>
-                <p className="font-semibold text-foreground">{plan.creator.name}</p>
-                <p className="text-muted-foreground">{plan.creator.email}</p>
+              <div className="flex items-center gap-4">
+                {plan.creator.avatar ? (
+                  <Image 
+                    src={plan.creator.avatar} 
+                    alt={plan.creator.name}
+                    width={64}
+                    height={64}
+                    className="w-16 h-16 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-300 to-pink-300 flex items-center justify-center text-white font-bold text-xl">
+                    {plan.creator.name?.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div>
+                  <p className="font-semibold text-foreground">{plan.creator.name}</p>
+                  <p className="text-muted-foreground">{plan.creator.email}</p>
+                  {totalReviews > 0 && (
+                    <div className="flex items-center gap-1 mt-1">
+                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      <span className="font-semibold text-foreground">{averageRating.toFixed(1)}</span>
+                      <span className="text-sm text-muted-foreground">({totalReviews} {totalReviews === 1 ? 'review' : 'reviews'})</span>
+                    </div>
+                  )}
+                </div>
               </div>
               <Button variant="outline" size="sm">
                 <MessageCircle className="h-4 w-4 mr-2" />
@@ -264,14 +380,162 @@ export default function TravelPlanDetailsPage() {
             </div>
           </div>
 
+          {/* Reviews Section */}
+          <div className="mb-8">
+            <Card>
+              <CardHeader>
+                <CardTitle>Reviews & Ratings</CardTitle>
+                <CardDescription>
+                  {totalReviews > 0 
+                    ? `${totalReviews} ${totalReviews === 1 ? 'review' : 'reviews'} for ${plan.creator.name}`
+                    : `No reviews yet for ${plan.creator.name}`
+                  }
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {/* Submit Review Form */}
+                {user && user.id !== plan.creator._id && (
+                  <form onSubmit={handleSubmitReview} className="mb-8 p-4 bg-muted/50 rounded-lg">
+                    <h3 className="font-semibold text-foreground mb-4">Write a Review</h3>
+                    
+                    {/* Star Rating */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-foreground mb-2">Rating</label>
+                      <div className="flex gap-2">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={() => setNewRating(star)}
+                            className="transition-transform hover:scale-110"
+                          >
+                            <Star
+                              className={`h-8 w-8 ${
+                                star <= newRating
+                                  ? 'fill-yellow-400 text-yellow-400'
+                                  : 'text-gray-300'
+                              }`}
+                            />
+                          </button>
+                        ))}
+                        <span className="ml-2 text-sm text-muted-foreground self-center">
+                          {newRating} {newRating === 1 ? 'star' : 'stars'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Comment */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-foreground mb-2">Comment</label>
+                      <Textarea
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                        placeholder="Share your experience traveling with this person..."
+                        className="min-h-[100px]"
+                        required
+                      />
+                    </div>
+
+                    <Button 
+                      type="submit" 
+                      className="gradient-sunset text-white"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          Submitting...
+                        </>
+                      ) : (
+                        'Submit Review'
+                      )}
+                    </Button>
+                  </form>
+                )}
+
+                {/* Reviews List */}
+                {isLoadingReviews ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-orange-500" />
+                  </div>
+                ) : reviews.length > 0 ? (
+                  <div className="space-y-4">
+                    {reviews.map((review) => (
+                      <div key={review._id} className="border-b border-border pb-4 last:border-0">
+                        <div className="flex items-start gap-3">
+                          {review.author.avatar ? (
+                            <Image
+                              src={review.author.avatar}
+                              alt={review.author.name}
+                              width={40}
+                              height={40}
+                              className="w-10 h-10 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-300 to-purple-300 flex items-center justify-center text-white font-bold">
+                              {review.author.name?.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-1">
+                              <p className="font-semibold text-foreground">{review.author.name}</p>
+                              <span className="text-sm text-muted-foreground">
+                                {new Date(review.createdAt).toLocaleDateString()}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1 mb-2">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Star
+                                  key={star}
+                                  className={`h-4 w-4 ${
+                                    star <= review.rating
+                                      ? 'fill-yellow-400 text-yellow-400'
+                                      : 'text-gray-300'
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                            <p className="text-foreground">{review.comment}</p>
+                            {review.travelPlan && (
+                              <p className="text-sm text-muted-foreground mt-2">
+                                Trip: {review.travelPlan.title}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center text-muted-foreground py-8">
+                    No reviews yet. Be the first to review {plan.creator.name}!
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
           {/* Participants */}
           <div>
             <h2 className="text-2xl font-bold text-foreground mb-4">Travelers ({plan.currentParticipants})</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {plan.participants.map(participant => (
                 <div key={participant._id} className="card-surface rounded-lg p-4 border border-border">
-                  <p className="font-semibold text-foreground">{participant.name}</p>
-                  <p className="text-sm text-muted-foreground">{participant.email}</p>
+                  {(participant as any).avatar ? (
+                    <Image 
+                      src={(participant as any).avatar} 
+                      alt={participant.name}
+                      width={48}
+                      height={48}
+                      className="w-12 h-12 rounded-full object-cover mb-3 mx-auto"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-300 to-purple-300 flex items-center justify-center text-white font-bold mx-auto mb-3">
+                      {participant.name?.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <p className="font-semibold text-foreground text-center">{participant.name}</p>
+                  <p className="text-sm text-muted-foreground text-center">{participant.email}</p>
                 </div>
               ))}
             </div>

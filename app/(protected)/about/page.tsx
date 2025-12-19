@@ -138,26 +138,29 @@ export default function AboutPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="section-shell bg-foreground text-background">
-        <div className="max-w-4xl mx-auto text-center">
-          <Sparkles className="h-12 w-12 text-coral mx-auto mb-6" />
-          <h2 className="font-heading text-3xl md:text-4xl font-bold mb-4">
-            Join Our <span className="text-coral">Global Community</span>
+      <section className="section-shell relative overflow-hidden rounded-3xl bg-gradient-to-br from-orange-500 via-pink-500 to-purple-600 dark:from-orange-600 dark:via-pink-700 dark:to-purple-800 text-white shadow-2xl">
+        <div className="absolute inset-0 opacity-60 mix-blend-overlay bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.2),transparent_35%),radial-gradient(circle_at_80%_0%,rgba(255,255,255,0.15),transparent_30%),radial-gradient(circle_at_50%_100%,rgba(255,255,255,0.18),transparent_35%)]" />
+        <div className="relative max-w-4xl mx-auto text-center space-y-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/15 backdrop-blur text-white text-sm font-medium">
+            <Sparkles className="h-4 w-4" />
+            Join Our Community
+          </div>
+          <h2 className="font-heading text-3xl md:text-4xl font-bold leading-tight">
+            Join Our <span className="text-white">Global Community</span>
           </h2>
-          <p className="text-background/80 text-lg mb-8 max-w-2xl mx-auto">
-            Become part of a thriving community of 50,000+ travelers who've discovered
-            that the best adventures are the ones we share.
+          <p className="text-white/90 text-lg max-w-2xl mx-auto">
+            Become part of a thriving community of 50,000+ travelers who know the best adventures are the ones we share.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
               href="/register"
-              className="inline-flex items-center justify-center h-11 px-8 rounded-md bg-coral text-background font-medium hover:bg-coral/90 transition-colors"
+              className="inline-flex items-center justify-center h-11 px-8 rounded-lg bg-white text-orange-600 font-semibold shadow-lg shadow-orange-500/30 transition-transform hover:-translate-y-0.5"
             >
               Start Your Journey
             </a>
             <a
               href="/explore"
-              className="inline-flex items-center justify-center h-11 px-8 rounded-md border border-background/30 text-background hover:bg-background/10 transition-colors"
+              className="inline-flex items-center justify-center h-11 px-8 rounded-lg border border-white/70 text-white/95 hover:bg-white/10 transition-colors"
             >
               Explore Travelers
             </a>

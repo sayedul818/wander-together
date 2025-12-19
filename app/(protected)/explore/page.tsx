@@ -274,8 +274,21 @@ export default function ExplorePage() {
 
                 {/* Creator */}
                 <div className="flex items-center justify-between pt-4 border-t border-border">
-                  <div className="text-sm text-muted-foreground">
-                    by <span className="font-medium text-foreground">{plan.creator?.name || "Unknown"}</span>
+                  <div className="flex items-center gap-2">
+                    {plan.creator?.avatar ? (
+                      <Image 
+                        src={plan.creator.avatar} 
+                        alt={plan.creator.name}
+                        width={32}
+                        height={32}
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-300 to-pink-300 flex items-center justify-center text-white font-bold text-xs">
+                        {plan.creator?.name?.charAt(0).toUpperCase() || "?"}
+                      </div>
+                    )}
+                    <span className="text-sm font-medium text-foreground">{plan.creator?.name || "Unknown"}</span>
                   </div>
                   {userId && plan.participants && plan.participants.includes(userId) ? (
                     <Button size="sm" className="gradient-sunset text-white" disabled>

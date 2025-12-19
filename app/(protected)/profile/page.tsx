@@ -8,8 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { motion } from 'framer-motion';
-import { Loader2, ArrowLeft, Save, X } from 'lucide-react';
+import { Loader2, ArrowLeft, Save, X, Upload } from 'lucide-react';
 import { toast } from 'sonner';
+import Image from 'next/image';
 
 interface User {
   id: string;
@@ -47,8 +48,10 @@ function ProfilePageContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoadingReviews, setIsLoadingReviews] = useState(true);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -56,6 +59,7 @@ function ProfilePageContent() {
     location: '',
     interests: [] as string[],
     visitedCountries: '',
+    avatar: '',
   });
 
   useEffect(() => {
@@ -74,7 +78,11 @@ function ProfilePageContent() {
           location: data.user.location || '',
           interests: data.user.interests || [],
           visitedCountries: data.user.visitedCountries?.join(', ') || '',
+          avatar: data.user.avatar || '',
         });
+        if (data.user.avatar) {
+          setAvatarPreview(data.user.avatar);
+        }
         // Fetch reviews for this user
         setIsLoadingReviews(true);
         const reviewsRes = await fetch(`/api/reviews?target=${data.user.id}`);
@@ -130,6 +138,54 @@ function ProfilePageContent() {
     }));
   };
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size should be less than 5MB');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const uploadFormData = new FormData();
+      uploadFormData.append('file', file);
+
+      const response = await fetch('/api/upload/cloudinary', {
+        method: 'POST',
+        body: uploadFormData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setFormData(prev => ({ ...prev, avatar: data.url }));
+        setAvatarPreview(data.url);
+        toast.success('Image uploaded successfully!');
+      } else {
+        const error = await response.json();
+        toast.error(error.error || 'Failed to upload image');
+      }
+    } catch (error) {
+      toast.error('Failed to upload image');
+      console.error('Upload error:', error);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleRemoveAvatar = () => {
+    setFormData(prev => ({ ...prev, avatar: '' }));
+    setAvatarPreview(null);
+  };
+
   const handleSave = async () => {
     if (!formData.name.trim()) {
       toast.error('Name is required');
@@ -148,6 +204,7 @@ function ProfilePageContent() {
           bio: formData.bio,
           location: formData.location,
           interests: formData.interests,
+          avatar: formData.avatar,
           visitedCountries: formData.visitedCountries
             .split(',')
             .map(c => c.trim())
@@ -202,11 +259,66 @@ function ProfilePageContent() {
           className="lg:col-span-1"
         >
           <div className="card-surface p-6 sticky top-4">
-            {/* Avatar */}
-            <div className="w-24 h-24 bg-gradient-to-br from-orange-300 to-pink-300 rounded-full mx-auto mb-4 flex items-center justify-center">
-              <span className="text-3xl font-bold text-white">
-                {user?.name?.charAt(0).toUpperCase()}
-              </span>
+            {/* Avatar Upload Section */}
+            <div className="mb-4">
+              {avatarPreview ? (
+                <div className="relative w-24 h-24 mx-auto mb-4">
+                  <Image
+                    src={avatarPreview}
+                    alt="User avatar"
+                    width={96}
+                    height={96}
+                    className="rounded-full object-cover w-full h-full"
+                  />
+                  {isEditing && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveAvatar}
+                      className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
+                      disabled={isUploading}
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="w-24 h-24 bg-gradient-to-br from-orange-300 to-pink-300 rounded-full mx-auto mb-4 flex items-center justify-center">
+                  <span className="text-3xl font-bold text-white">
+                    {user?.name?.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
+
+              {isEditing && (
+                <div className="relative">
+                  <Input
+                    id="avatar"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarUpload}
+                    className="hidden"
+                    disabled={isUploading}
+                  />
+                  <label
+                    htmlFor="avatar"
+                    className={`flex items-center justify-center gap-2 px-3 py-2 border border-dashed border-input rounded-lg cursor-pointer hover:border-orange-500 transition text-sm ${
+                      isUploading ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
+                  >
+                    {isUploading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-4 w-4" />
+                        Upload Photo
+                      </>
+                    )}
+                  </label>
+                </div>
+              )}
             </div>
 
             {/* User Info */}
@@ -214,8 +326,7 @@ function ProfilePageContent() {
             <p className="text-muted-foreground text-center mb-4">{user?.email}</p>
 
             {/* Status Badges */}
-            <div className="flex gap-2 justify-center mb-4">
-              {user?.isPremium && (
+            <div className="flex gap-2 justify-center mb-4">{user?.isPremium && (
                 <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs font-semibold">
                   Premium
                 </span>
@@ -474,7 +585,7 @@ function ProfilePageContent() {
 }
 export default function ProfilePage() {
   return (
-    <Suspense>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-orange-500" /></div>}>
       <ProfilePageContent />
     </Suspense>
   );

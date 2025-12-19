@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
@@ -7,29 +8,13 @@ import {
   Globe, Shield, Heart, CheckCircle2, Plane, Camera
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-// If the Badge component exists elsewhere, update the import path accordingly.
-// For example, if it's at '@/components/ui/badge', use:
 import { Badge } from '@/components/ui/badge';
-// Or, if you need to create the Badge component, create the file at 'components/Badge.tsx' with a basic implementation like below:
-
-// components/Badge.tsx
-// import React from 'react';
-// export function Badge({ children, ...props }: React.HTMLAttributes<HTMLSpanElement>) {
-//   return <span {...props} style={{ padding: '0.25em 0.75em', borderRadius: '9999px', background: '#eee', fontWeight: 500 }}>{children}</span>;
-// }
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { mockTravelers } from '@/data/mockTravelers';
+import Image from 'next/image';
 
 const MotionButton = motion.create(Button);
-
-const destinations = [
-  { name: 'Bali, Indonesia', image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600', travelers: 234 },
-  { name: 'Tokyo, Japan', image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=600', travelers: 189 },
-  { name: 'Santorini, Greece', image: 'https://images.unsplash.com/photo-1613395877344-13d4a8e0d49e?w=600', travelers: 156 },
-  { name: 'Machu Picchu, Peru', image: 'https://images.unsplash.com/photo-1587595431973-160d0d94add1?w=600', travelers: 98 },
-];
 
 const testimonials = [
   {
@@ -69,6 +54,93 @@ const stats = [
 ];
 
 export default function Home() {
+  const [destinations, setDestinations] = useState<any[]>([]);
+  const [topTravelers, setTopTravelers] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch travel plans for destinations
+        const plansRes = await fetch('/api/travel-plans?limit=100');
+        if (plansRes.ok) {
+          const data = await plansRes.json();
+          // Group by destination and count
+          const destinationMap = new Map();
+          data.plans.forEach((plan: any) => {
+            const dest = plan.destination;
+            if (!destinationMap.has(dest)) {
+              destinationMap.set(dest, {
+                name: dest,
+                image: plan.image || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=600',
+                travelers: 0
+              });
+            }
+            destinationMap.get(dest).travelers += plan.currentParticipants || 1;
+          });
+          
+          // Convert to array and sort by travelers count
+          const destArray = Array.from(destinationMap.values())
+            .sort((a, b) => b.travelers - a.travelers)
+            .slice(0, 4);
+          
+          setDestinations(destArray);
+        }
+
+        // Fetch users with reviews
+        const usersRes = await fetch('/api/reviews');
+        if (usersRes.ok) {
+          const reviewData = await usersRes.json();
+          // Group reviews by user and calculate stats
+          const userStatsMap = new Map();
+          
+          reviewData.reviews?.forEach((review: any) => {
+            const userId = review.target?._id || review.target;
+            if (!userId) return;
+            
+            if (!userStatsMap.has(userId)) {
+              userStatsMap.set(userId, {
+                id: userId,
+                name: review.target?.name || 'Unknown',
+                avatar: review.target?.avatar,
+                location: review.target?.location || 'Unknown',
+                interests: review.target?.interests || [],
+                totalRating: 0,
+                count: 0
+              });
+            }
+            
+            const userStats = userStatsMap.get(userId);
+            userStats.totalRating += review.rating;
+            userStats.count += 1;
+          });
+          
+          // Calculate average ratings and sort
+          const topUsers = Array.from(userStatsMap.values())
+            .filter(u => u.count > 0)
+            .map(u => ({
+              ...u,
+              rating: u.totalRating / u.count,
+              reviewCount: u.count
+            }))
+            .sort((a, b) => {
+              if (b.rating !== a.rating) return b.rating - a.rating;
+              return b.reviewCount - a.reviewCount;
+            })
+            .slice(0, 4);
+          
+          setTopTravelers(topUsers);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -151,17 +223,34 @@ export default function Home() {
               transition={{ duration: 0.8, delay: 0.5 }}
               className="mt-12 flex justify-center items-center gap-2"
             >
-              <div className="flex -space-x-3">
-                {mockTravelers.slice(0, 5).map((traveler, i) => (
-                  <Avatar key={i} className="h-10 w-10 border-2 border-background">
-                    <AvatarImage src={traveler.avatar} />
-                    <AvatarFallback>{traveler.name.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                ))}
-              </div>
-              <span className="text-sm text-muted-foreground ml-3">
-                <span className="font-semibold text-foreground">2,340+</span> travelers joined this week
-              </span>
+              {topTravelers.length > 0 ? (
+                <>
+                  <div className="flex -space-x-3">
+                    {topTravelers.slice(0, 5).map((traveler, i) => (
+                      <Avatar key={i} className="h-10 w-10 border-2 border-background">
+                        {traveler.avatar ? (
+                          <Image
+                            src={traveler.avatar}
+                            alt={traveler.name}
+                            width={40}
+                            height={40}
+                            className="object-cover"
+                          />
+                        ) : (
+                          <AvatarFallback>{traveler.name.charAt(0)}</AvatarFallback>
+                        )}
+                      </Avatar>
+                    ))}
+                  </div>
+                  <span className="text-sm text-muted-foreground ml-3">
+                    <span className="font-semibold text-foreground">Join our community</span> of travelers
+                  </span>
+                </>
+              ) : (
+                <span className="text-sm text-muted-foreground">
+                  <span className="font-semibold text-foreground">Join our community</span> of travelers
+                </span>
+              )}
             </motion.div>
           </div>
         </div>
@@ -254,30 +343,48 @@ export default function Home() {
         </motion.div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {destinations.map((dest, i) => (
-            <motion.div
-              key={dest.name}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="group relative h-72 rounded-2xl overflow-hidden cursor-pointer hover-lift"
-            >
-              <img
-                src={dest.image}
-                alt={dest.name}
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-foreground/90 via-foreground/20 to-transparent" />
-              <div className="absolute bottom-4 left-4 right-4">
-                <h3 className="font-heading text-lg font-semibold text-background mb-1">{dest.name}</h3>
-                <div className="flex items-center gap-1 text-background/80 text-sm">
-                  <Users className="h-3.5 w-3.5" />
-                  {dest.travelers} travelers interested
+          {isLoading ? (
+            // Loading skeleton
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-72 rounded-2xl bg-muted animate-pulse" />
+            ))
+          ) : destinations.length > 0 ? (
+            destinations.map((dest, i) => (
+              <motion.div
+                key={dest.name}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="group relative h-72 rounded-2xl overflow-hidden cursor-pointer hover-lift"
+              >
+                {dest.image && dest.image.startsWith('http') ? (
+                  <Image
+                    src={dest.image}
+                    alt={dest.name}
+                    fill
+                    className="object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-orange-300 to-pink-300 flex items-center justify-center">
+                    <MapPin className="h-16 w-16 text-white/50" />
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-foreground/90 via-foreground/20 to-transparent" />
+                <div className="absolute bottom-4 left-4 right-4">
+                  <h3 className="font-heading text-lg font-semibold text-background mb-1">{dest.name}</h3>
+                  <div className="flex items-center gap-1 text-background/80 text-sm">
+                    <Users className="h-3.5 w-3.5" />
+                    {dest.travelers} travelers interested
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            ))
+          ) : (
+            <div className="col-span-4 text-center py-12 text-muted-foreground">
+              No destinations available yet
+            </div>
+          )}
         </div>
       </section>
 
@@ -299,33 +406,49 @@ export default function Home() {
         </motion.div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {mockTravelers.slice(0, 4).map((traveler, i) => (
-            <motion.div
-              key={traveler.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="bg-card rounded-2xl border border-border/50 p-6 text-center hover-lift"
-            >
-              <Avatar className="h-20 w-20 mx-auto border-4 border-secondary mb-4">
-                <AvatarImage src={traveler.avatar} />
-                <AvatarFallback>{traveler.name.charAt(0)}</AvatarFallback>
-              </Avatar>
-              <h3 className="font-heading font-semibold text-foreground mb-1">{traveler.name}</h3>
-              <p className="text-sm text-muted-foreground mb-3">{traveler.location}</p>
-              <div className="flex items-center justify-center gap-1 mb-3">
-                <Star className="h-4 w-4 text-gold fill-gold" />
-                <span className="font-medium">{traveler.rating}</span>
-                <span className="text-sm text-muted-foreground">({traveler.reviewCount})</span>
-              </div>
-              <div className="flex flex-wrap gap-1 justify-center">
-                {traveler.interests.slice(0, 3).map((interest) => (
-                  <Badge key={interest} variant="secondary" className="text-xs">{interest}</Badge>
-                ))}
-              </div>
-            </motion.div>
-          ))}
+          {isLoading ? (
+            // Loading skeleton
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-64 rounded-2xl bg-muted animate-pulse" />
+            ))
+          ) : topTravelers.length > 0 ? (
+            topTravelers.map((traveler, i) => (
+              <motion.div
+                key={traveler.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="bg-card rounded-2xl border border-border/50 p-6 text-center hover-lift"
+              >
+                <Avatar className="h-20 w-20 mx-auto border-4 border-secondary mb-4">
+                  {traveler.avatar ? (
+                    <AvatarImage src={traveler.avatar} />
+                  ) : (
+                    <AvatarFallback className="bg-gradient-to-br from-orange-300 to-pink-300 text-white text-xl font-bold">
+                      {traveler.name.charAt(0)}
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+                <h3 className="font-heading font-semibold text-foreground mb-1">{traveler.name}</h3>
+                <p className="text-sm text-muted-foreground mb-3">{traveler.location}</p>
+                <div className="flex items-center justify-center gap-1 mb-3">
+                  <Star className="h-4 w-4 text-gold fill-gold" />
+                  <span className="font-medium">{traveler.rating.toFixed(1)}</span>
+                  <span className="text-sm text-muted-foreground">({traveler.reviewCount})</span>
+                </div>
+                <div className="flex flex-wrap gap-1 justify-center">
+                  {traveler.interests.slice(0, 3).map((interest: string) => (
+                    <Badge key={interest} variant="secondary" className="text-xs">{interest}</Badge>
+                  ))}
+                </div>
+              </motion.div>
+            ))
+          ) : (
+            <div className="col-span-4 text-center py-12 text-muted-foreground">
+              No top travelers available yet
+            </div>
+          )}
         </div>
 
         <div className="text-center mt-10">

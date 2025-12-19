@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { Calendar, Users, MapPin, Plus, Loader2, ArrowLeft, Trash2, Edit2 } from 'lucide-react';
 import { toast } from 'sonner';
+import Image from 'next/image';
 
 interface TravelPlan {
   _id: string;
@@ -18,7 +19,8 @@ interface TravelPlan {
   maxParticipants: number;
   interests: string[];
   status: string;
-  creator: { _id: string; name: string };
+  creator: { _id: string; name: string; avatar?: string };
+  image?: string;
   participants?: Array<string | { _id: string }>;
 }
 
@@ -191,8 +193,17 @@ export default function TravelPlansPage() {
               onClick={() => router.push(`/travel-plans/${plan._id}`)}
             >
               {/* Image */}
-              <div className="h-40 bg-gradient-to-br from-orange-300 to-pink-300 flex items-center justify-center relative">
-                <MapPin className="h-8 w-8 text-white/50" />
+              <div className="h-40 bg-gradient-to-br from-orange-300 to-pink-300 flex items-center justify-center relative overflow-hidden">
+                {plan.image ? (
+                  <Image 
+                    src={plan.image} 
+                    alt={plan.title}
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <MapPin className="h-8 w-8 text-white/50" />
+                )}
                 {plan.creator?._id === user?.id && (
                   <span className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded text-xs font-medium">
                     Created
@@ -204,6 +215,24 @@ export default function TravelPlansPage() {
               <div className="p-6">
                 <h3 className="text-lg font-semibold text-foreground mb-1">{plan.title}</h3>
                 <p className="text-muted-foreground text-sm mb-4">{plan.destination}</p>
+
+                {/* Creator Avatar */}
+                <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border">
+                  {plan.creator?.avatar ? (
+                    <Image 
+                      src={plan.creator.avatar} 
+                      alt={plan.creator.name}
+                      width={32}
+                      height={32}
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-300 to-pink-300 flex items-center justify-center text-white font-bold text-xs">
+                      {plan.creator?.name?.charAt(0).toUpperCase() || "?"}
+                    </div>
+                  )}
+                  <span className="text-sm text-muted-foreground">{plan.creator?.name || "Unknown"}</span>
+                </div>
 
                 {/* Details */}
                 <div className="space-y-2 mb-4 text-sm text-muted-foreground">

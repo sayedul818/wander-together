@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
 import { Calendar, Users, MapPin, DollarSign, Zap } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
+import Image from "next/image";
 
 const INTERESTS = [
   "Adventure", "Beach", "Culture", "Food", "History", "Nature",
@@ -115,8 +116,17 @@ export default function MatchmakingPage() {
           {results.map((plan, idx) => (
             <motion.div key={plan._id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.1 }}
               className="card-surface overflow-hidden hover:shadow-md transition cursor-pointer">
-              <div className="h-40 bg-gradient-to-br from-orange-300 to-pink-300 flex items-center justify-center relative">
-                <MapPin className="h-10 w-10 text-white/50" />
+              <div className="h-40 bg-gradient-to-br from-orange-300 to-pink-300 flex items-center justify-center relative overflow-hidden">
+                {plan.image ? (
+                  <Image 
+                    src={plan.image} 
+                    alt={plan.title}
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <MapPin className="h-10 w-10 text-white/50" />
+                )}
                 <span className="absolute top-4 right-4 bg-background rounded-full px-3 py-1 shadow text-primary font-bold">{plan.score}% Match</span>
               </div>
               <div className="p-6">
@@ -127,7 +137,19 @@ export default function MatchmakingPage() {
                 <p className="text-muted-foreground text-sm mb-2">Trip Type: {plan.travelStyle || 'N/A'}</p>
                 <p className="text-muted-foreground text-sm mb-2">Matching Interests: {plan.interests?.filter((i: string) => form.interests.includes(i)).join(', ') || 'None'}</p>
                 <div className="flex items-center gap-2 mt-4">
-                  <img src={plan.creator?.avatar || '/avatar.png'} alt={plan.creator?.name} className="w-8 h-8 rounded-full object-cover" />
+                  {plan.creator?.avatar ? (
+                    <Image 
+                      src={plan.creator.avatar} 
+                      alt={plan.creator?.name}
+                      width={32}
+                      height={32}
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-300 to-pink-300 flex items-center justify-center text-white font-bold text-xs">
+                      {plan.creator?.name?.charAt(0).toUpperCase() || "?"}
+                    </div>
+                  )}
                   <span className="font-medium text-foreground">{plan.creator?.name}</span>
                 </div>
                 <div className="flex gap-2 mt-6">

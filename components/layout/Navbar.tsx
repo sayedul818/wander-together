@@ -20,6 +20,7 @@ import {
   Gift,
   Map,
   Heart,
+  Info,
   Sun,
   ChevronDown,
 } from 'lucide-react';
@@ -91,6 +92,7 @@ export function Navbar() {
   const navLinks = [
     { href: '/', label: 'Home', icon: Home },
     { href: '/explore', label: 'Explore', icon: MapPin },
+    ...(user ? [] : [{ href: '/about', label: 'About', icon: Info }]),
   ];
 
   const megaMenuSections = [
@@ -108,6 +110,7 @@ export function Navbar() {
         ...(user ? [{ label: 'Best matches', href: '/matchmaking', icon: Sparkles }] : []),
         { label: 'Premium perks', href: '/pricing', icon: Gift },
         { label: 'Safety center', href: '/about/safety', icon: ShieldCheck },
+        ...(user ? [{ label: 'About', href: '/about', icon: Info }] : []),
       ],
     },
     {

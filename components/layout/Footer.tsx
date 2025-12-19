@@ -29,7 +29,7 @@ export function Footer() {
               <li><Link href="/explore" className="hover:text-white transition">Explore Trips</Link></li>
               <li><Link href="/pricing" className="hover:text-white transition">Pricing</Link></li>
               <li><Link href="#" className="hover:text-white transition">Features</Link></li>
-              <li><Link href="#" className="hover:text-white transition">How It Works</Link></li>
+              <li><Link href="/how-it-works" className="hover:text-white transition">How It Works</Link></li>
             </ul>
           </div>
 
@@ -48,10 +48,10 @@ export function Footer() {
           <div className="min-w-[180px] max-w-[220px] flex-shrink-0">
             <h3 className="font-semibold mb-4">Legal</h3>
             <ul className="space-y-2 text-gray-400">
-              <li><Link href="#" className="hover:text-white transition">Privacy Policy</Link></li>
-              <li><Link href="#" className="hover:text-white transition">Terms of Service</Link></li>
-              <li><Link href="#" className="hover:text-white transition">Cookie Policy</Link></li>
-              <li><Link href="#" className="hover:text-white transition">Disclaimer</Link></li>
+              <li><Link href="/privacy-policy" className="hover:text-white transition">Privacy Policy</Link></li>
+              <li><Link href="/terms-of-service" className="hover:text-white transition">Terms of Service</Link></li>
+              <li><Link href="/cookie-policy" className="hover:text-white transition">Cookie Policy</Link></li>
+              <li><Link href="/disclaimer" className="hover:text-white transition">Disclaimer</Link></li>
             </ul>
           </div>
         </div>

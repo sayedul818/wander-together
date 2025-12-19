@@ -8,6 +8,7 @@ const profileUpdateSchema = z.object({
   name: z.string().min(1),
   bio: z.string().optional(),
   location: z.string().optional(),
+  avatar: z.string().optional(),
   interests: z.array(z.string()).optional(),
   visitedCountries: z.array(z.string()).optional(),
 });
@@ -33,6 +34,7 @@ export async function PUT(req: NextRequest) {
         name: validatedData.name,
         bio: validatedData.bio,
         location: validatedData.location,
+        avatar: validatedData.avatar,
         interests: validatedData.interests,
         visitedCountries: validatedData.visitedCountries,
       },
