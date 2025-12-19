@@ -5,59 +5,28 @@ import * as AccordionPrimitive from "@radix-ui/react-accordion";
 import { ChevronDown } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-
-const Accordion = AccordionPrimitive.Root;
-
-const AccordionItem = React.forwardRef<
-  React.ElementRef<typeof AccordionPrimitive.Item>,
-  React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Item>
->(({ className, ...props }, ref) => (
-  <AccordionPrimitive.Item ref={ref} className={cn("border border-b", className)} {...props} />
-));
-AccordionItem.displayName = "AccordionItem";
-
-const AccordionTrigger = React.forwardRef<
-  React.ElementRef<typeof AccordionPrimitive.Trigger>,
-  React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Trigger>
->(({ className, children, ...props }, ref) => (
-  <AccordionPrimitive.Header className="flex">
-    <AccordionPrimitive.Trigger
-      ref={ref}
-      className={cn(
-        "flex flex-1 items-center justify-between py-4 px-6 font-medium transition-all hover:underline [&[data-state=open]>svg]:rotate-180",
-        className
-      )}
-      {...props}
-    >
-      {children}
-      <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
-    </AccordionPrimitive.Trigger>
-  </AccordionPrimitive.Header>
-));
-AccordionTrigger.displayName = AccordionPrimitive.Trigger.displayName;
-
-const AccordionContent = React.forwardRef<
-  React.ElementRef<typeof AccordionPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Content>
->(({ className, children, ...props }, ref) => (
-  <AccordionPrimitive.Content
-    ref={ref}
-    className={cn(
-      "overflow-hidden text-sm transition-all data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down",
-      className
-    )}
-    {...props}
-  >
-    <div className="pb-4 pt-0 px-6">{children}</div>
-  </AccordionPrimitive.Content>
-));
-AccordionContent.displayName = AccordionPrimitive.Content.displayName;
-
-export { Accordion, AccordionItem, AccordionTrigger, AccordionContent };
-
 import type { Metadata } from 'next';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+
+// Accordion components for FAQ
+const Accordion = ({ children }: { children: React.ReactNode }) => (
+  <div className="space-y-4">{children}</div>
+);
+
+const AccordionItem = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
+  <div className={`card-surface px-6 border-0 ${className}`}>{children}</div>
+);
+
+const AccordionTrigger = ({ children }: { children: React.ReactNode }) => (
+  <div className="text-left font-medium text-foreground hover:text-primary py-4 px-6 cursor-pointer border-b">
+    {children}
+  </div>
+);
+
+const AccordionContent = ({ children }: { children: React.ReactNode }) => (
+  <div className="pb-4 pt-0 px-6 text-muted-foreground">{children}</div>
+);
 
 export default function FAQPage() {
   const faqCategories = [
@@ -172,17 +141,16 @@ export default function FAQPage() {
                 <span className="h-8 w-1 rounded-full gradient-sunset" />
                 {category.category}
               </h2>
-              <Accordion type="single" collapsible className="space-y-4">
+              <Accordion>
                 {category.questions.map((faq, faqIndex) => (
                   <AccordionItem
                     key={faqIndex}
-                    value={`${categoryIndex}-${faqIndex}`}
-                    className="card-surface px-6 border-0"
+                    className="border border-b"
                   >
-                    <AccordionTrigger className="text-left font-medium text-foreground hover:text-primary">
+                    <AccordionTrigger>
                       {faq.q}
                     </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground">
+                    <AccordionContent>
                       {faq.a}
                     </AccordionContent>
                   </AccordionItem>
