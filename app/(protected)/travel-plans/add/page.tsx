@@ -6,15 +6,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Loader2, Calendar, MapPin, Users, Zap } from 'lucide-react';
+import { ArrowLeft, Loader2, Calendar, MapPin, Users, Zap, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const interests = ['Adventure', 'Beach', 'Culture', 'Food', 'Hiking', 'History', 'Nature', 'Photography', 'Shopping', 'Wellness'];
 
 export default function AddTravelPlanPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -26,6 +29,7 @@ export default function AddTravelPlanPage() {
     interests: [] as string[],
     travelStyle: 'Friends',
     accommodationType: 'Hotel',
+    image: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -41,6 +45,54 @@ export default function AddTravelPlanPage() {
         ? prev.interests.filter(i => i !== interest)
         : [...prev.interests, interest],
     }));
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size should be less than 5MB');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/upload/cloudinary', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setFormData(prev => ({ ...prev, image: data.url }));
+        setImagePreview(data.url);
+        toast.success('Image uploaded successfully!');
+      } else {
+        const error = await response.json();
+        toast.error(error.error || 'Failed to upload image');
+      }
+    } catch (error) {
+      toast.error('Failed to upload image');
+      console.error('Upload error:', error);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setFormData(prev => ({ ...prev, image: '' }));
+    setImagePreview(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -171,6 +223,59 @@ export default function AddTravelPlanPage() {
               required
             />
             {errors.description && <p className="text-sm text-destructive mt-1">{errors.description}</p>}
+          </div>
+
+          {/* Image Upload */}
+          <div className="mb-6">
+            <Label htmlFor="image" className="block mb-2">Trip Image</Label>
+            {imagePreview ? (
+              <div className="relative w-full h-64 rounded-lg overflow-hidden border border-input">
+                <Image 
+                  src={imagePreview} 
+                  alt="Trip preview" 
+                  fill
+                  className="object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={handleRemoveImage}
+                  className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
+                  disabled={isUploading}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ) : (
+              <div className="relative">
+                <Input
+                  id="image"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                  disabled={isUploading}
+                />
+                <label
+                  htmlFor="image"
+                  className={`flex flex-col items-center justify-center w-full h-64 border-2 border-dashed border-input rounded-lg cursor-pointer hover:border-orange-500 transition ${
+                    isUploading ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                >
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="h-12 w-12 text-orange-500 animate-spin mb-4" />
+                      <p className="text-sm text-muted-foreground">Uploading...</p>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-12 w-12 text-gray-400 mb-4" />
+                      <p className="text-sm text-muted-foreground">Click to upload trip image</p>
+                      <p className="text-xs text-muted-foreground mt-2">PNG, JPG up to 5MB</p>
+                    </>
+                  )}
+                </label>
+              </div>
+            )}
           </div>
 
           {/* Dates */}

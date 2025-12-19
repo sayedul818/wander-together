@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { Calendar, Users, MapPin, DollarSign, ArrowLeft, Loader2, Heart, Share2, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface TravelPlan {
   _id: string;
@@ -25,6 +26,7 @@ interface TravelPlan {
   travelStyle?: string;
   accommodationType?: string;
   createdAt: string;
+  image?: string;
 }
 
 interface User {
@@ -155,8 +157,19 @@ export default function TravelPlanDetailsPage() {
           className="lg:col-span-2"
         >
           {/* Image */}
-          <div className="w-full h-96 bg-gradient-to-br from-orange-300 to-pink-300 rounded-lg mb-8 flex items-center justify-center">
-            <MapPin className="h-24 w-24 text-white/50" />
+          <div className="w-full h-96 rounded-lg mb-8 overflow-hidden relative">
+            {plan.image ? (
+              <Image 
+                src={plan.image} 
+                alt={plan.title}
+                fill
+                className="object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-orange-300 to-pink-300 flex items-center justify-center">
+                <MapPin className="h-24 w-24 text-white/50" />
+              </div>
+            )}
           </div>
 
           {/* Title & Status */}

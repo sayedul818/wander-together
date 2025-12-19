@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { motion } from 'framer-motion';
 import { Search, Calendar, Users, MapPin, Loader2, Heart, Filter } from 'lucide-react';
 import { TripCardSkeletonList } from '@/components/skeletons/TripCardSkeleton';
+import Image from 'next/image';
 
 interface TravelPlan {
   _id: string;
@@ -22,6 +23,7 @@ interface TravelPlan {
   creator: { name: string; avatar?: string; _id?: string };
   status: string;
   participants?: string[];
+  image?: string;
 }
 export default function ExplorePage() {
   const router = useRouter();
@@ -220,12 +222,23 @@ export default function ExplorePage() {
               className="card-surface overflow-hidden hover:shadow-lg transition cursor-pointer"
               onClick={() => router.push(`/travel-plans/${plan._id}`)}
             >
-              {/* Image Placeholder */}
-              <div className="h-48 bg-gradient-to-br from-orange-300 to-pink-300 flex items-center justify-center relative">
+              {/* Image */}
+              <div className="h-48 relative">
+                {plan.image ? (
+                  <Image 
+                    src={plan.image} 
+                    alt={plan.title}
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="h-full bg-gradient-to-br from-orange-300 to-pink-300 flex items-center justify-center">
+                    <MapPin className="h-12 w-12 text-white/50" />
+                  </div>
+                )}
                 <button className="absolute top-4 right-4 bg-background rounded-full p-2 shadow hover:shadow-md transition">
                   <Heart className="h-5 w-5 text-red-500" />
                 </button>
-                <MapPin className="h-12 w-12 text-white/50" />
               </div>
 
               {/* Content */}

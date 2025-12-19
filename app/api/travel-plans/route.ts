@@ -17,6 +17,7 @@ const createPlanSchema = z.object({
   maxParticipants: z.number().default(10),
   travelStyle: z.string().optional(),
   accommodationType: z.string().optional(),
+  image: z.string().optional(),
   coverPhoto: z.string().optional(),
 });
 
