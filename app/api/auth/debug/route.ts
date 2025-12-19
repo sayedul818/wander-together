@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
     const cookieStore = await cookies();
     const token = cookieStore.get('token')?.value || null;
 
-    let tokenPayload = null;
+    let tokenPayload: any = null;
     let dbUser = null;
 
     if (token) {
