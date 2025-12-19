@@ -57,8 +57,6 @@ export function Navbar() {
         if (response?.ok) {
           const data = await response.json();
           setUser(data.user);
-          // Refresh the router to update protected routes
-          router.refresh();
         }
       } catch (error) {
         // Ignore abort errors (normal when component unmounts)
