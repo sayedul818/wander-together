@@ -18,6 +18,23 @@ export function ThemeToggle({ className }: { className?: string }) {
 
   const toggleTheme = () => setTheme(isDark ? "light" : "dark");
 
+  // Prevent hydration mismatch by not rendering theme-dependent styles until mounted
+  if (!mounted) {
+    return (
+      <Button
+        variant="ghost"
+        size="sm"
+        className={cn("relative gap-2", className)}
+        aria-label="Toggle color theme"
+        disabled
+      >
+        <Sun className="h-4 w-4 transition-transform duration-300" />
+        <Moon className="h-4 w-4 transition-transform duration-300 absolute" />
+        <span className="sr-only">Toggle theme</span>
+      </Button>
+    );
+  }
+
   return (
     <Button
       variant="ghost"

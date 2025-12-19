@@ -44,23 +44,35 @@ export function Navbar() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    const abortController = new AbortController();
+
     const fetchUser = async () => {
       try {
+        // Suppress 401 logs by catching and handling silently
         const response = await fetch('/api/auth/session', {
           credentials: 'include',
-        });
-        if (response.ok) {
+          signal: abortController.signal,
+        }).catch(() => null);
+
+        if (response?.ok) {
           const data = await response.json();
           setUser(data.user);
+          // Refresh the router to update protected routes
+          router.refresh();
         }
       } catch (error) {
-        console.error('Error fetching user:', error);
+        // Ignore abort errors (normal when component unmounts)
+        if (error instanceof Error && error.name !== 'AbortError') {
+          console.error('Error fetching user:', error);
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchUser();
+    
+    return () => abortController.abort();
   }, []);
 
   const handleLogout = async () => {

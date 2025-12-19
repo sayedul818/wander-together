@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     const token = cookieStore.get('token')?.value || null;
 
     let tokenPayload: any = null;
-    let dbUser = null;
+    let dbUser: any = null;
 
     if (token) {
       try {

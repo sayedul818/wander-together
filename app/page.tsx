@@ -22,7 +22,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { mockTravelers } from '@/data/mockTravelers';
 
-const MotionButton = motion(Button);
+const MotionButton = motion.create(Button);
 
 const destinations = [
   { name: 'Bali, Indonesia', image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600', travelers: 234 },

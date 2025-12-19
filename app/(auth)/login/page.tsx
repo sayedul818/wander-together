@@ -53,7 +53,8 @@ export default function LoginPage() {
         const sessionRes = await fetch('/api/auth/session', { credentials: 'include' });
         if (sessionRes.ok) {
           toast.success('Welcome back! You have successfully logged in.');
-          router.push('/dashboard');
+          // Force a page reload to ensure Navbar gets updated user state
+          window.location.href = '/dashboard';
         } else {
           toast.error('Session could not be established. Please try again.');
         }

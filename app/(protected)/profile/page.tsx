@@ -92,7 +92,7 @@ function ProfilePageContent() {
     };
 
     // Check for upgrade
-    const upgraded = searchParams.get('upgraded');
+    const upgraded = searchParams?.get('upgraded');
     if (upgraded === '1') {
       fetch('/api/auth/upgrade-status', { method: 'POST' })
         .then(async (res) => {
