@@ -206,8 +206,8 @@ function MessagesContent() {
 
   if (!userId) {
     return (
-      <div className="fixed inset-0 top-16 bg-background pt-10 pb-10">
-        <div className="page-shell h-full flex">
+      <div className="bg-background">
+        <div className="page-shell min-h-[calc(100dvh-4rem)] flex pt-6 pb-[env(safe-area-inset-bottom)] overflow-hidden">
           {/* Sidebar */}
           <div className="w-full lg:w-80 xl:w-96 border-r border-border bg-card flex-shrink-0 rounded-l-xl overflow-hidden">
             <div className="flex flex-col h-full">
@@ -342,8 +342,8 @@ function MessagesContent() {
   }
 
   return (
-    <div className="fixed inset-0 top-16 bg-background pt-10 pb-10">
-      <div className="page-shell h-full flex">
+    <div className="bg-background">
+      <div className="page-shell min-h-[calc(100dvh-4rem)] flex pt-6 pb-[env(safe-area-inset-bottom)] overflow-hidden">
         {/* Sidebar - Hidden on mobile when chat is open */}
         <div className={`${userId ? 'hidden' : 'flex'} lg:flex w-full lg:w-80 xl:w-96 border-r border-border bg-card flex-shrink-0 rounded-l-xl overflow-hidden`}>
           <div className="flex flex-col h-full w-full">
@@ -561,8 +561,8 @@ function MessagesContent() {
 
 function LoadingFallback() {
   return (
-    <div className="fixed inset-0 top-16 bg-background pt-10 pb-10">
-      <div className="page-shell h-full flex items-center justify-center">
+    <div className="bg-background">
+      <div className="page-shell min-h-[calc(100dvh-4rem)] flex items-center justify-center pt-6 pb-[env(safe-area-inset-bottom)] overflow-hidden">
         <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
       </div>
     </div>
