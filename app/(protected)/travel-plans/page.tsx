@@ -19,6 +19,7 @@ interface TravelPlan {
   interests: string[];
   status: string;
   creator: { _id: string; name: string };
+  participants?: Array<string | { _id: string }>;
 }
 
 interface User {
@@ -51,7 +52,13 @@ export default function TravelPlansPage() {
         const plansRes = await fetch('/api/travel-plans');
         if (plansRes.ok) {
           const plansData = await plansRes.json();
-          setPlans(plansData.plans || []);
+          const normalizedPlans = (plansData.plans || []).map((plan: any) => ({
+            ...plan,
+            participants: Array.isArray(plan.participants)
+              ? plan.participants.map((p: any) => (typeof p === 'string' ? p : p._id))
+              : [],
+          }));
+          setPlans(normalizedPlans);
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -84,13 +91,19 @@ export default function TravelPlansPage() {
     }
   };
 
+  const userId = user?.id;
+
+  const ownedOrJoined = plans.filter(
+    (p) => p.creator?._id === userId || (userId && p.participants?.includes(userId))
+  );
+
   const getFilteredPlans = () => {
     if (filter === 'created') {
-      return plans.filter(p => p.creator._id === user?.id);
+      return ownedOrJoined.filter(p => p.creator?._id === userId);
     } else if (filter === 'joined') {
-      return plans.filter(p => p.creator._id !== user?.id);
+      return ownedOrJoined.filter(p => p.creator?._id !== userId && p.participants?.includes(userId as string));
     }
-    return plans;
+    return ownedOrJoined;
   };
 
   const filteredPlans = getFilteredPlans();
@@ -104,7 +117,7 @@ export default function TravelPlansPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-12">
+    <div className="page-shell py-12">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -116,7 +129,7 @@ export default function TravelPlansPage() {
           Back to Dashboard
         </Link>
         <div className="flex items-center justify-between">
-          <h1 className="text-4xl font-bold text-gray-900">My Trips</h1>
+          <h1 className="text-4xl font-bold text-foreground">My Trips</h1>
           <Link href="/travel-plans/add">
             <Button className="gradient-sunset text-white">
               <Plus className="h-4 w-4 mr-2" />
@@ -138,8 +151,8 @@ export default function TravelPlansPage() {
             onClick={() => setFilter(f as 'all' | 'created' | 'joined')}
             className={`px-4 py-2 rounded-lg font-medium transition ${
               filter === f
-                ? 'bg-orange-500 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted text-foreground hover:bg-muted/80'
             }`}
           >
             {f === 'all' ? 'All Trips' : f === 'created' ? 'Created' : 'Joined'}
@@ -152,10 +165,10 @@ export default function TravelPlansPage() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-center py-16 bg-gray-50 rounded-lg"
+          className="text-center py-16 card-surface"
         >
-          <MapPin className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-600 text-lg mb-4">
+          <MapPin className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+          <p className="text-muted-foreground text-lg mb-4">
             {filter === 'created' && "You haven't created any trips yet."}
             {filter === 'joined' && "You haven't joined any trips yet."}
             {filter === 'all' && "You don't have any trips yet."}
@@ -174,13 +187,13 @@ export default function TravelPlansPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.1 }}
-              className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition cursor-pointer"
+              className="card-surface rounded-lg shadow-sm border border-border overflow-hidden hover:shadow-md hover:border-primary/40 transition cursor-pointer"
               onClick={() => router.push(`/travel-plans/${plan._id}`)}
             >
               {/* Image */}
               <div className="h-40 bg-gradient-to-br from-orange-300 to-pink-300 flex items-center justify-center relative">
                 <MapPin className="h-8 w-8 text-white/50" />
-                {plan.creator._id === user?.id && (
+                {plan.creator?._id === user?.id && (
                   <span className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded text-xs font-medium">
                     Created
                   </span>
@@ -189,11 +202,11 @@ export default function TravelPlansPage() {
 
               {/* Content */}
               <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-1">{plan.title}</h3>
-                <p className="text-gray-600 text-sm mb-4">{plan.destination}</p>
+                <h3 className="text-lg font-semibold text-foreground mb-1">{plan.title}</h3>
+                <p className="text-muted-foreground text-sm mb-4">{plan.destination}</p>
 
                 {/* Details */}
-                <div className="space-y-2 mb-4 text-sm text-gray-600">
+                <div className="space-y-2 mb-4 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
                     {new Date(plan.startDate).toLocaleDateString()} - {new Date(plan.endDate).toLocaleDateString()}
@@ -207,7 +220,7 @@ export default function TravelPlansPage() {
                 {/* Tags */}
                 <div className="flex gap-2 mb-4 flex-wrap">
                   {plan.interests.slice(0, 2).map(interest => (
-                    <span key={interest} className="bg-orange-100 text-orange-700 px-2 py-1 rounded text-xs">
+                    <span key={interest} className="bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-200 px-2 py-1 rounded text-xs">
                       {interest}
                     </span>
                   ))}
@@ -216,19 +229,19 @@ export default function TravelPlansPage() {
                 {/* Status */}
                 <div className="mb-4">
                   <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                    plan.status === 'planning' ? 'bg-blue-100 text-blue-700' :
-                    plan.status === 'confirmed' ? 'bg-green-100 text-green-700' :
-                    'bg-gray-100 text-gray-700'
+                    plan.status === 'planning' ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-100' :
+                    plan.status === 'confirmed' ? 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-100' :
+                    'bg-muted text-muted-foreground'
                   }`}>
                     {plan.status.charAt(0).toUpperCase() + plan.status.slice(1)}
                   </span>
                 </div>
 
                 {/* Actions */}
-                {plan.creator._id === user?.id && (
-                  <div className="flex gap-2 pt-4 border-t">
+                {plan.creator?._id === user?.id && (
+                  <div className="flex gap-2 pt-4 border-t border-border">
                     <button
-                      className="flex-1 flex items-center justify-center gap-2 py-2 text-gray-700 hover:text-orange-500 transition"
+                      className="flex-1 flex items-center justify-center gap-2 py-2 text-foreground hover:text-primary transition"
                       onClick={(e) => {
                         e.stopPropagation();
                         router.push(`/travel-plans/${plan._id}/edit`);
@@ -238,7 +251,7 @@ export default function TravelPlansPage() {
                       <span>Edit</span>
                     </button>
                     <button
-                      className="flex-1 flex items-center justify-center gap-2 py-2 text-gray-700 hover:text-red-500 transition"
+                      className="flex-1 flex items-center justify-center gap-2 py-2 text-foreground hover:text-red-500 transition"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleDelete(plan._id);

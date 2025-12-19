@@ -59,35 +59,35 @@ export default function MatchmakingPage() {
   };
 
   return (
-    <>
+    <div className="min-h-screen bg-background text-foreground">
       <Navbar />
-      <div className="container mx-auto px-4 py-12">
+      <div className="page-shell py-12">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-10 text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">Find Your Best Match</h1>
-        <p className="text-gray-600 text-lg">Discover the top 1–5 travel plans that fit you perfectly.</p>
+        <h1 className="text-4xl font-bold text-foreground mb-2">Find Your Best Match</h1>
+        <p className="text-muted-foreground text-lg">Discover the top 1–5 travel plans that fit you perfectly.</p>
       </motion.div>
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm border p-8 mb-10 grid gap-6 md:grid-cols-2">
+      <form onSubmit={handleSubmit} className="card-surface p-8 mb-10 grid gap-6 md:grid-cols-2">
         <div>
-          <label className="block font-semibold mb-2">Destination</label>
+          <label className="block font-semibold mb-2 text-foreground">Destination</label>
           <Input name="destination" value={form.destination} onChange={handleChange} required placeholder="e.g. Cox's Bazar" />
         </div>
         <div className="flex gap-4">
           <div className="flex-1">
-            <label className="block font-semibold mb-2">Start Date</label>
+            <label className="block font-semibold mb-2 text-foreground">Start Date</label>
             <Input type="date" name="startDate" value={form.startDate} onChange={handleChange} required />
           </div>
           <div className="flex-1">
-            <label className="block font-semibold mb-2">End Date</label>
+            <label className="block font-semibold mb-2 text-foreground">End Date</label>
             <Input type="date" name="endDate" value={form.endDate} onChange={handleChange} required />
           </div>
         </div>
         <div>
-          <label className="block font-semibold mb-2">Budget (BDT)</label>
+          <label className="block font-semibold mb-2 text-foreground">Budget (BDT)</label>
           <Input type="number" name="budget" value={form.budget} onChange={handleChange} required min={0} placeholder="e.g. 10000" />
         </div>
         <div>
-          <label className="block font-semibold mb-2">Travel Style</label>
-          <select name="travelStyle" value={form.travelStyle} onChange={handleChange} className="w-full border rounded px-3 py-2">
+          <label className="block font-semibold mb-2 text-foreground">Travel Style</label>
+          <select name="travelStyle" value={form.travelStyle} onChange={handleChange} className="w-full border rounded px-3 py-2 bg-background text-foreground border-border">
             <option value="">Select...</option>
             {TRAVEL_STYLES.map(style => (
               <option key={style} value={style}>{style}</option>
@@ -95,11 +95,11 @@ export default function MatchmakingPage() {
           </select>
         </div>
         <div className="md:col-span-2">
-          <label className="block font-semibold mb-2">Interests</label>
+          <label className="block font-semibold mb-2 text-foreground">Interests</label>
           <div className="flex flex-wrap gap-2">
             {INTERESTS.map(interest => (
               <button type="button" key={interest} onClick={() => toggleInterest(interest)}
-                className={`px-3 py-1 rounded-full border ${form.interests.includes(interest) ? 'bg-orange-500 text-white border-orange-500' : 'bg-gray-100 text-gray-700 border-gray-200'}`}>{interest}</button>
+                className={`px-3 py-1 rounded-full border transition font-medium ${form.interests.includes(interest) ? 'bg-primary text-white border-primary' : 'bg-muted text-white border-muted hover:bg-muted/80'}`}>{interest}</button>
             ))}
           </div>
         </div>
@@ -109,26 +109,26 @@ export default function MatchmakingPage() {
           </Button>
         </div>
       </form>
-      {error && <div className="text-red-500 text-center mb-6">{error}</div>}
+      {error && <div className="text-destructive text-center mb-6">{error}</div>}
       {results.length > 0 && (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {results.map((plan, idx) => (
             <motion.div key={plan._id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.1 }}
-              className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition cursor-pointer">
+              className="card-surface overflow-hidden hover:shadow-md transition cursor-pointer">
               <div className="h-40 bg-gradient-to-br from-orange-300 to-pink-300 flex items-center justify-center relative">
                 <MapPin className="h-10 w-10 text-white/50" />
-                <span className="absolute top-4 right-4 bg-white rounded-full px-3 py-1 shadow text-orange-600 font-bold">{plan.score}% Match</span>
+                <span className="absolute top-4 right-4 bg-background rounded-full px-3 py-1 shadow text-primary font-bold">{plan.score}% Match</span>
               </div>
               <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{plan.title}</h3>
-                <p className="text-gray-600 text-sm mb-2">Destination: {plan.destination}</p>
-                <p className="text-gray-600 text-sm mb-2">Dates: {new Date(plan.startDate).toLocaleDateString()} - {new Date(plan.endDate).toLocaleDateString()}</p>
-                <p className="text-gray-600 text-sm mb-2">Budget: {plan.budget ? plan.budget.toLocaleString() : 'N/A'} BDT</p>
-                <p className="text-gray-600 text-sm mb-2">Trip Type: {plan.travelStyle || 'N/A'}</p>
-                <p className="text-gray-600 text-sm mb-2">Matching Interests: {plan.interests?.filter((i: string) => form.interests.includes(i)).join(', ') || 'None'}</p>
+                <h3 className="text-lg font-semibold text-foreground mb-2">{plan.title}</h3>
+                <p className="text-muted-foreground text-sm mb-2">Destination: {plan.destination}</p>
+                <p className="text-muted-foreground text-sm mb-2">Dates: {new Date(plan.startDate).toLocaleDateString()} - {new Date(plan.endDate).toLocaleDateString()}</p>
+                <p className="text-muted-foreground text-sm mb-2">Budget: {plan.budget ? plan.budget.toLocaleString() : 'N/A'} BDT</p>
+                <p className="text-muted-foreground text-sm mb-2">Trip Type: {plan.travelStyle || 'N/A'}</p>
+                <p className="text-muted-foreground text-sm mb-2">Matching Interests: {plan.interests?.filter((i: string) => form.interests.includes(i)).join(', ') || 'None'}</p>
                 <div className="flex items-center gap-2 mt-4">
                   <img src={plan.creator?.avatar || '/avatar.png'} alt={plan.creator?.name} className="w-8 h-8 rounded-full object-cover" />
-                  <span className="font-medium text-gray-900">{plan.creator?.name}</span>
+                  <span className="font-medium text-foreground">{plan.creator?.name}</span>
                 </div>
                 <div className="flex gap-2 mt-6">
                   <Button size="sm" className="gradient-sunset text-white" onClick={() => window.location.href = `/travel-plans/${plan._id}`}>View Trip Details</Button>
@@ -140,6 +140,6 @@ export default function MatchmakingPage() {
         </div>
       )}
       </div>
-    </>
+    </div>
   );
 }

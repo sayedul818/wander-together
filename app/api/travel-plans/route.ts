@@ -3,6 +3,8 @@ import connectDB from '@/lib/db';
 import TravelPlan from '@/models/TravelPlan';
 import { getSession } from '@/lib/auth';
 import { z } from 'zod';
+import { IncomingForm } from 'formidable';
+import fs from 'fs';
 
 const createPlanSchema = z.object({
   title: z.string().min(1),
@@ -36,7 +38,7 @@ export async function GET(req: NextRequest) {
     if (participant) {
       filter.participants = participant;
     }
-
+    
     const plans = await TravelPlan.find(filter)
       .populate('creator', 'name email avatar')
       .populate('participants', 'name email avatar')

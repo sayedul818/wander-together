@@ -1,4 +1,4 @@
-// File: D:\projects\wander-together\app\(protected)\layout.tsx
+// File: D:\projects\TripBuddyGo\app\(protected)\layout.tsx
 import * as entry from '../../../../app/(protected)/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

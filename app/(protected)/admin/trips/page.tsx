@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { Loader2, ArrowLeft, Trash2, MapPin, Users, Calendar } from 'lucide-react';
+import { Loader2, ArrowLeft, Trash2, MapPin, Users, Calendar, Search, Filter } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface TripRow {
@@ -23,6 +23,10 @@ interface TripRow {
 export default function AdminTripsPage() {
   const router = useRouter();
   const [trips, setTrips] = useState<TripRow[]>([]);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [page, setPage] = useState(1);
+  const pageSize = 6;
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -58,6 +62,11 @@ export default function AdminTripsPage() {
     fetchData();
   }, [router]);
 
+  // Reset pagination on filter/search change
+  useEffect(() => {
+    setPage(1);
+  }, [search, statusFilter]);
+
   const handleDeleteTrip = async (tripId: string, tripTitle: string) => {
     if (!confirm(`Are you sure you want to delete trip "${tripTitle}"?`)) return;
 
@@ -85,8 +94,19 @@ export default function AdminTripsPage() {
     );
   }
 
+  const filteredTrips = trips
+    .filter((trip) =>
+      `${trip.title} ${trip.destination} ${trip.creator.name} ${trip.creator.email}`
+        .toLowerCase()
+        .includes(search.toLowerCase())
+    )
+    .filter((trip) => statusFilter === 'all' || trip.status === statusFilter);
+
+  const totalPages = Math.max(1, Math.ceil(filteredTrips.length / pageSize));
+  const paginatedTrips = filteredTrips.slice((page - 1) * pageSize, page * pageSize);
+
   return (
-    <div className="container mx-auto px-4 py-12">
+    <div className="page-shell py-12">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -97,18 +117,46 @@ export default function AdminTripsPage() {
           <ArrowLeft className="h-4 w-4" />
           Back to Admin
         </Link>
-        <h1 className="text-4xl font-bold text-gray-900">Trips Management</h1>
-        <p className="text-gray-600 mt-2">Total Trips: {trips.length}</p>
+        <h1 className="text-4xl font-bold text-foreground">Trips Management</h1>
+        <p className="text-muted-foreground mt-2">Total Trips: {trips.length}</p>
       </motion.div>
 
+      {/* Filters */}
+      <div className="card-surface border border-border rounded-lg p-4 mb-8">
+        <div className="grid gap-3 md:grid-cols-3 items-center">
+          <div className="relative md:col-span-2">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by title, destination, or creator"
+              className="w-full rounded-lg border border-border bg-background px-9 py-2 text-sm text-foreground"
+            />
+          </div>
+          <div className="flex items-center gap-3">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+            >
+              <option value="all">All statuses</option>
+              <option value="planning">Planning</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
       {/* Trips Grid */}
-      {trips.length === 0 ? (
+      {filteredTrips.length === 0 ? (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center"
+          className="card-surface rounded-lg shadow-sm border border-border p-8 text-center"
         >
-          <p className="text-gray-600 text-lg">No trips found</p>
+          <p className="text-muted-foreground text-lg">No trips found</p>
         </motion.div>
       ) : (
         <motion.div
@@ -116,13 +164,13 @@ export default function AdminTripsPage() {
           animate={{ opacity: 1 }}
           className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
         >
-          {trips.map((trip, idx) => (
+          {paginatedTrips.map((trip, idx) => (
             <motion.div
               key={trip._id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.1 }}
-              className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
+              className="card-surface rounded-lg shadow-sm border border-border overflow-hidden"
             >
               {/* Header */}
               <div className="h-32 bg-gradient-to-br from-orange-300 to-pink-300 flex items-center justify-center relative">
@@ -138,11 +186,11 @@ export default function AdminTripsPage() {
 
               {/* Content */}
               <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-1">{trip.title}</h3>
-                <p className="text-gray-600 text-sm mb-4">{trip.destination}</p>
+                <h3 className="text-lg font-semibold text-foreground mb-1">{trip.title}</h3>
+                <p className="text-muted-foreground text-sm mb-4">{trip.destination}</p>
 
                 {/* Details */}
-                <div className="space-y-2 mb-4 text-sm text-gray-600">
+                <div className="space-y-2 mb-4 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
                     {new Date(trip.startDate).toLocaleDateString()} - {new Date(trip.endDate).toLocaleDateString()}
@@ -154,16 +202,16 @@ export default function AdminTripsPage() {
                 </div>
 
                 {/* Creator */}
-                <div className="mb-4 pb-4 border-b">
-                  <p className="text-xs text-gray-600 font-medium mb-1">Created by:</p>
-                  <p className="text-sm text-gray-900">{trip.creator.name}</p>
-                  <p className="text-xs text-gray-600">{trip.creator.email}</p>
+                <div className="mb-4 pb-4 border-b border-border">
+                  <p className="text-xs text-muted-foreground font-medium mb-1">Created by:</p>
+                  <p className="text-sm text-foreground">{trip.creator.name}</p>
+                  <p className="text-xs text-muted-foreground">{trip.creator.email}</p>
                 </div>
 
                 {/* Action */}
                 <button
                   onClick={() => handleDeleteTrip(trip._id, trip.title)}
-                  className="w-full flex items-center justify-center gap-2 py-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition"
+                  className="w-full flex items-center justify-center gap-2 py-2 text-red-500 hover:text-red-600 hover:bg-red-500/10 rounded transition"
                 >
                   <Trash2 className="h-4 w-4" />
                   Delete Trip
@@ -172,6 +220,34 @@ export default function AdminTripsPage() {
             </motion.div>
           ))}
         </motion.div>
+      )}
+
+      {/* Pagination */}
+      {filteredTrips.length > 0 && (
+        <div className="mt-10 flex items-center justify-between flex-wrap gap-4">
+          <p className="text-sm text-muted-foreground">
+            Showing {(page - 1) * pageSize + 1}-{Math.min(page * pageSize, filteredTrips.length)} of {filteredTrips.length}
+          </p>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+            >
+              Previous
+            </Button>
+            <span className="text-sm text-foreground">Page {page} of {totalPages}</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
       )}
     </div>
   );

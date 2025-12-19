@@ -27,6 +27,7 @@ export default function AddTravelPlanPage() {
     travelStyle: 'Friends',
     accommodationType: 'Hotel',
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -44,14 +45,29 @@ export default function AddTravelPlanPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.title || !formData.destination || !formData.startDate || !formData.endDate) {
-      toast.error('Please fill in all required fields');
-      return;
+    const nextErrors: Record<string, string> = {};
+
+    if (!formData.title.trim()) nextErrors.title = 'Trip title is required';
+    if (!formData.destination.trim()) nextErrors.destination = 'Destination is required';
+    if (!formData.description.trim()) nextErrors.description = 'Description is required';
+    if (!formData.startDate) nextErrors.startDate = 'Start date is required';
+    if (!formData.endDate) nextErrors.endDate = 'End date is required';
+    if (formData.startDate && formData.endDate && formData.endDate < formData.startDate) {
+      nextErrors.endDate = 'End date cannot be before start date';
+    }
+    if (formData.budget && Number(formData.budget) <= 0) {
+      nextErrors.budget = 'Budget must be greater than 0';
+    }
+    if (!formData.maxParticipants || Number(formData.maxParticipants) < 2) {
+      nextErrors.maxParticipants = 'Max participants must be at least 2';
+    }
+    if (formData.interests.length === 0) {
+      nextErrors.interests = 'Select at least one interest';
     }
 
-    if (formData.interests.length === 0) {
-      toast.error('Please select at least one interest');
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) {
+      toast.error('Please fix the highlighted fields');
       return;
     }
 
@@ -84,7 +100,8 @@ export default function AddTravelPlanPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-12 max-w-4xl">
+    <div className="min-h-screen bg-background">
+      <div className="section-shell max-w-4xl">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -95,8 +112,8 @@ export default function AddTravelPlanPage() {
           <ArrowLeft className="h-4 w-4" />
           Back to Dashboard
         </Link>
-        <h1 className="text-4xl font-bold text-gray-900">Create a New Trip</h1>
-        <p className="text-gray-600 mt-2">Plan your adventure and find travelers to join you</p>
+        <h1 className="text-4xl font-bold text-foreground">Create a New Trip</h1>
+        <p className="text-muted-foreground mt-2">Plan your adventure and find travelers to join you</p>
       </motion.div>
 
       {/* Form */}
@@ -104,11 +121,11 @@ export default function AddTravelPlanPage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         onSubmit={handleSubmit}
-        className="bg-white rounded-lg shadow-sm border border-gray-200 p-8"
+        className="card-surface p-8"
       >
         {/* Basic Info */}
         <div className="mb-8">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-6">Trip Details</h2>
+          <h2 className="text-2xl font-semibold text-foreground mb-6">Trip Details</h2>
           
           <div className="grid md:grid-cols-2 gap-6 mb-6">
             <div>
@@ -121,6 +138,7 @@ export default function AddTravelPlanPage() {
                 onChange={handleInputChange}
                 required
               />
+              {errors.title && <p className="text-sm text-destructive mt-1">{errors.title}</p>}
             </div>
             <div>
               <Label htmlFor="destination" className="block mb-2">Destination *</Label>
@@ -136,6 +154,7 @@ export default function AddTravelPlanPage() {
                   required
                 />
               </div>
+              {errors.destination && <p className="text-sm text-destructive mt-1">{errors.destination}</p>}
             </div>
           </div>
 
@@ -145,12 +164,13 @@ export default function AddTravelPlanPage() {
               id="description"
               name="description"
               placeholder="Tell us about your trip..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+              className="w-full px-4 py-2 border border-input bg-background rounded-md focus:ring-2 focus:ring-ring focus:border-transparent resize-none"
               rows={4}
               value={formData.description}
               onChange={handleInputChange}
               required
             />
+            {errors.description && <p className="text-sm text-destructive mt-1">{errors.description}</p>}
           </div>
 
           {/* Dates */}
@@ -169,6 +189,7 @@ export default function AddTravelPlanPage() {
                   required
                 />
               </div>
+              {errors.startDate && <p className="text-sm text-destructive mt-1">{errors.startDate}</p>}
             </div>
             <div>
               <Label htmlFor="endDate" className="block mb-2">End Date *</Label>
@@ -184,6 +205,7 @@ export default function AddTravelPlanPage() {
                   required
                 />
               </div>
+              {errors.endDate && <p className="text-sm text-destructive mt-1">{errors.endDate}</p>}
             </div>
           </div>
 
@@ -199,6 +221,7 @@ export default function AddTravelPlanPage() {
                 value={formData.budget}
                 onChange={handleInputChange}
               />
+              {errors.budget && <p className="text-sm text-destructive mt-1">{errors.budget}</p>}
             </div>
             <div>
               <Label htmlFor="maxParticipants" className="block mb-2">Max Participants</Label>
@@ -214,13 +237,14 @@ export default function AddTravelPlanPage() {
                   min="2"
                 />
               </div>
+              {errors.maxParticipants && <p className="text-sm text-destructive mt-1">{errors.maxParticipants}</p>}
             </div>
           </div>
         </div>
 
         {/* Travel Style & Accommodation */}
         <div className="mb-8">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-6">Trip Type</h2>
+          <h2 className="text-2xl font-semibold text-foreground mb-6">Trip Type</h2>
           
           <div className="grid md:grid-cols-2 gap-6">
             <div>
@@ -230,7 +254,7 @@ export default function AddTravelPlanPage() {
                 name="travelStyle"
                 value={formData.travelStyle}
                 onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-input bg-background rounded-md focus:ring-2 focus:ring-ring focus:border-transparent"
               >
                 <option>Solo</option>
                 <option>Friends</option>
@@ -245,7 +269,7 @@ export default function AddTravelPlanPage() {
                 name="accommodationType"
                 value={formData.accommodationType}
                 onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-input bg-background rounded-md focus:ring-2 focus:ring-ring focus:border-transparent"
               >
                 <option>Budget</option>
                 <option>Hotel</option>
@@ -258,7 +282,7 @@ export default function AddTravelPlanPage() {
 
         {/* Interests */}
         <div className="mb-8">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-6">Interests *</h2>
+          <h2 className="text-2xl font-semibold text-foreground mb-6">Interests *</h2>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             {interests.map(interest => (
               <button
@@ -275,6 +299,7 @@ export default function AddTravelPlanPage() {
               </button>
             ))}
           </div>
+          {errors.interests && <p className="text-sm text-destructive mt-3">{errors.interests}</p>}
         </div>
 
         {/* Submit */}
@@ -304,6 +329,7 @@ export default function AddTravelPlanPage() {
           </Link>
         </div>
       </motion.form>
+      </div>
     </div>
   );
 }

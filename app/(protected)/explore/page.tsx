@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { motion } from 'framer-motion';
-import { Search, Calendar, Users, MapPin, Loader2, Heart } from 'lucide-react';
+import { Search, Calendar, Users, MapPin, Loader2, Heart, Filter } from 'lucide-react';
+import { TripCardSkeletonList } from '@/components/skeletons/TripCardSkeleton';
 
 interface TravelPlan {
   _id: string;
@@ -26,6 +27,11 @@ export default function ExplorePage() {
   const router = useRouter();
   const [plans, setPlans] = useState<TravelPlan[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [destinationFilter, setDestinationFilter] = useState('all');
+  const [interestFilter, setInterestFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [page, setPage] = useState(1);
+  const pageSize = 6;
   const [isLoading, setIsLoading] = useState(true);
   const [joiningId, setJoiningId] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
@@ -97,7 +103,15 @@ export default function ExplorePage() {
     fetchData();
   }, []);
 
+  // Reset to first page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, destinationFilter, interestFilter, statusFilter]);
+
   // Show all trips except those with creator name 'Unknown'
+  const destinations = Array.from(new Set(plans.map((p) => p.destination))).sort();
+  const interests = Array.from(new Set(plans.flatMap((p) => p.interests || []))).sort();
+
   const filteredPlans = plans
     .filter(plan => plan.creator && plan.creator.name !== 'Unknown')
     .filter(plan => !userId || (plan.creator && plan.creator._id !== userId))
@@ -105,61 +119,110 @@ export default function ExplorePage() {
       plan.destination.toLowerCase().includes(searchQuery.toLowerCase()) ||
       plan.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       plan.interests.some(interest => interest.toLowerCase().includes(searchQuery.toLowerCase()))
-    );
+    )
+    .filter(plan => destinationFilter === 'all' || plan.destination === destinationFilter)
+    .filter(plan => interestFilter === 'all' || plan.interests.includes(interestFilter))
+    .filter(plan => statusFilter === 'all' || plan.status === statusFilter);
+
+  const totalPages = Math.max(1, Math.ceil(filteredPlans.length / pageSize));
+  const paginatedPlans = filteredPlans.slice((page - 1) * pageSize, page * pageSize);
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      {/* Hero Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-12"
-      >
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">Explore Adventures</h1>
-        <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-          Discover amazing trips planned by travelers like you and join the adventure.
-        </p>
-      </motion.div>
+    <div className="min-h-screen bg-background">
+      <div className="section-shell">
+        {/* Hero Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-12"
+        >
+          <h1 className="text-4xl font-bold text-foreground mb-4">Explore Adventures</h1>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            Discover amazing trips planned by travelers like you and join the adventure.
+          </p>
+        </motion.div>
 
-      {/* Search Section */}
-      <div className="mb-12">
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-          <Input
-            type="text"
-            placeholder="Search by destination, activity, or keywords..."
-            className="pl-12 py-3 text-lg"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-      </div>
+        {/* Filters */}
+        <div className="mb-12 space-y-4">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search by destination, activity, or keywords..."
+              className="pl-12 py-3 text-lg"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
 
-      {/* Results */}
-      {isLoading ? (
-        <div className="flex items-center justify-center min-h-[400px]">
-          <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">Filters</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 md:col-span-2 gap-3">
+              <select
+                value={destinationFilter}
+                onChange={(e) => setDestinationFilter(e.target.value)}
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+              >
+                <option value="all">All destinations</option>
+                {destinations.map((d) => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+
+              <select
+                value={interestFilter}
+                onChange={(e) => setInterestFilter(e.target.value)}
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+              >
+                <option value="all">All interests</option>
+                {interests.map((i) => (
+                  <option key={i} value={i}>{i}</option>
+                ))}
+              </select>
+
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+              >
+                <option value="all">All statuses</option>
+                <option value="planning">Planning</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+          </div>
         </div>
-      ) : filteredPlans.length === 0 ? (
+
+        {/* Results */}
+        {isLoading ? (
+          <TripCardSkeletonList count={6} />
+        ) : filteredPlans.length === 0 ? (
         <div className="text-center py-12">
-          <MapPin className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-600 text-lg">No trips found matching your search.</p>
-          <p className="text-gray-500">Try a different search or create your own trip!</p>
+          <MapPin className="h-12 w-12 text-muted-foreground/40 mx-auto mb-4" />
+          <p className="text-foreground text-lg mb-2">No trips found matching your search.</p>
+          <p className="text-muted-foreground">Try a different search or create your own trip!</p>
+          <Button variant="outline" size="lg" className="mt-6" onClick={() => router.push('/travel-plans/add')}>
+            Create a Trip
+          </Button>
         </div>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredPlans.map((plan, idx) => (
+          {paginatedPlans.map((plan, idx) => (
             <motion.div
               key={plan._id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.1 }}
-              className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition cursor-pointer"
+              className="card-surface overflow-hidden hover:shadow-lg transition cursor-pointer"
               onClick={() => router.push(`/travel-plans/${plan._id}`)}
             >
               {/* Image Placeholder */}
               <div className="h-48 bg-gradient-to-br from-orange-300 to-pink-300 flex items-center justify-center relative">
-                <button className="absolute top-4 right-4 bg-white rounded-full p-2 shadow hover:shadow-md transition">
+                <button className="absolute top-4 right-4 bg-background rounded-full p-2 shadow hover:shadow-md transition">
                   <Heart className="h-5 w-5 text-red-500" />
                 </button>
                 <MapPin className="h-12 w-12 text-white/50" />
@@ -167,21 +230,21 @@ export default function ExplorePage() {
 
               {/* Content */}
               <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{plan.title}</h3>
-                <p className="text-gray-600 text-sm mb-4 line-clamp-2">{plan.description}</p>
+                <h3 className="text-lg font-semibold text-foreground mb-2">{plan.title}</h3>
+                <p className="text-muted-foreground text-sm mb-4 line-clamp-2">{plan.description}</p>
 
                 {/* Details */}
                 <div className="space-y-3 mb-4">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <MapPin className="h-4 w-4" />
                     {plan.destination}
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="h-4 w-4" />
                     {new Date(plan.startDate).toLocaleDateString()} -{' '}
                     {new Date(plan.endDate).toLocaleDateString()}
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Users className="h-4 w-4" />
                     {plan.currentParticipants}/{plan.maxParticipants} travelers
                   </div>
@@ -190,16 +253,16 @@ export default function ExplorePage() {
                 {/* Tags */}
                 <div className="flex gap-2 mb-4 flex-wrap">
                   {plan.interests.slice(0, 2).map((interest) => (
-                    <span key={interest} className="bg-orange-100 text-orange-700 px-2 py-1 rounded text-xs">
+                    <span key={interest} className="bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-200 px-2 py-1 rounded text-xs">
                       {interest}
                     </span>
                   ))}
                 </div>
 
                 {/* Creator */}
-                <div className="flex items-center justify-between pt-4 border-t">
-                  <div className="text-sm text-gray-600">
-                    by <span className="font-medium">{plan.creator?.name || "Unknown"}</span>
+                <div className="flex items-center justify-between pt-4 border-t border-border">
+                  <div className="text-sm text-muted-foreground">
+                    by <span className="font-medium text-foreground">{plan.creator?.name || "Unknown"}</span>
                   </div>
                   {userId && plan.participants && plan.participants.includes(userId) ? (
                     <Button size="sm" className="gradient-sunset text-white" disabled>
@@ -224,6 +287,37 @@ export default function ExplorePage() {
           ))}
         </div>
       )}
+
+      {/* Pagination */}
+      {!isLoading && filteredPlans.length > 0 && (
+        <div className="mt-10 flex items-center justify-between flex-wrap gap-4">
+          <p className="text-sm text-muted-foreground">
+            Showing {(page - 1) * pageSize + 1}-{Math.min(page * pageSize, filteredPlans.length)} of {filteredPlans.length}
+          </p>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+            >
+              Previous
+            </Button>
+            <span className="text-sm text-foreground">
+              Page {page} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
+      </div>
     </div>
   );
 }

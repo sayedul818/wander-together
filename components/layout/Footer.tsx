@@ -7,8 +7,8 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-gray-900 text-white mt-20">
-      <div className="container mx-auto px-4 py-16">
+    <footer className="bg-gray-900 dark:bg-gray-950 text-white mt-20">
+      <div className="page-shell py-16">
         {/* 4 columns always, scrollable on mobile */}
         <div className="flex gap-8 mb-12 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900 min-w-full" style={{ WebkitOverflowScrolling: 'touch' }}>
           {/* Brand */}
@@ -37,10 +37,10 @@ export function Footer() {
           <div className="min-w-[180px] max-w-[220px] flex-shrink-0">
             <h3 className="font-semibold mb-4">Company</h3>
             <ul className="space-y-2 text-gray-400">
-              <li><Link href="#" className="hover:text-white transition">About Us</Link></li>
-              <li><Link href="#" className="hover:text-white transition">Blog</Link></li>
-              <li><Link href="#" className="hover:text-white transition">Careers</Link></li>
-              <li><Link href="#" className="hover:text-white transition">Contact</Link></li>
+              <li><Link href="/about" className="hover:text-white transition">About Us</Link></li>
+              <li><Link href="/faq" className="hover:text-white transition">FAQ</Link></li>
+              <li><Link href="/contact" className="hover:text-white transition">Contact</Link></li>
+              <li><Link href="/about/safety" className="hover:text-white transition">Safety</Link></li>
             </ul>
           </div>
 

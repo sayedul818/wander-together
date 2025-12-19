@@ -85,6 +85,12 @@ export default function PricingPage() {
 
   // Helper to handle Stripe checkout
   const handleUpgrade = async (planName: string, idx: number) => {
+    // Redirect to login if user is not logged in
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
     setLoadingIdx(idx);
     try {
       if (user?.isPremium) {
@@ -111,20 +117,20 @@ export default function PricingPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
 
       {/* Hero Section */}
-      <section className="py-20 px-4">
-        <div className="container mx-auto text-center max-w-3xl">
+      <section className="section-shell">
+        <div className="page-shell text-center max-w-3xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+            <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6">
               Simple, Transparent <span className="text-gradient-sunset">Pricing</span>
             </h1>
-            <p className="text-xl text-gray-600 mb-8">
+            <p className="text-xl text-muted-foreground mb-8">
               Choose the perfect plan for your travel adventures. No hidden fees, cancel anytime.
             </p>
           </motion.div>
@@ -132,8 +138,8 @@ export default function PricingPage() {
       </section>
 
       {/* Pricing Cards */}
-      <section className="py-12 px-4 flex-1">
-        <div className="container mx-auto">
+      <section className="section-shell flex-1">
+        <div className="page-shell">
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {pricingPlans.map((plan, idx) => (
               <motion.div
@@ -141,10 +147,10 @@ export default function PricingPage() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.1 }}
-                className={`rounded-lg border-2 p-8 transition ${
+                className={`card-surface border-2 p-8 transition ${
                   plan.highlighted
-                    ? 'border-orange-500 bg-orange-50 shadow-lg scale-105'
-                    : 'border-gray-200 bg-white hover:border-orange-200'
+                    ? 'border-orange-500 bg-orange-50 dark:bg-orange-500/10 shadow-lg scale-105'
+                    : 'border-border hover:border-orange-200'
                 }`}
               >
                 {/* Badge */}
@@ -158,14 +164,14 @@ export default function PricingPage() {
                 )}
 
                 {/* Plan Name */}
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
-                <p className="text-gray-600 mb-6">{plan.description}</p>
+                <h3 className="text-2xl font-bold text-foreground mb-2">{plan.name}</h3>
+                <p className="text-muted-foreground mb-6">{plan.description}</p>
 
                 {/* Price */}
                 <div className="mb-6">
-                  <div className="text-4xl font-bold text-gray-900">
+                  <div className="text-4xl font-bold text-foreground">
                     {plan.price}
-                    {plan.period && <span className="text-lg text-gray-600">{plan.period}</span>}
+                    {plan.period && <span className="text-lg text-muted-foreground">{plan.period}</span>}
                   </div>
                 </div>
 
@@ -197,7 +203,7 @@ export default function PricingPage() {
                   {plan.features.map((feature, featureIdx) => (
                     <li key={featureIdx} className="flex items-start gap-3">
                       <Check className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
-                      <span className="text-gray-700">{feature}</span>
+                      <span className="text-muted-foreground">{feature}</span>
                     </li>
                   ))}
                 </ul>
@@ -208,9 +214,9 @@ export default function PricingPage() {
       </section>
 
       {/* FAQ */}
-      <section className="py-20 px-4 bg-gray-50">
-        <div className="container mx-auto max-w-3xl">
-          <h2 className="text-4xl font-bold text-gray-900 text-center mb-12">Frequently Asked Questions</h2>
+      <section className="section-shell bg-background">
+        <div className="page-shell max-w-3xl mx-auto">
+          <h2 className="text-4xl font-bold text-foreground text-center mb-12">Frequently Asked Questions</h2>
 
           <div className="space-y-6">
             {[
@@ -220,7 +226,7 @@ export default function PricingPage() {
               },
               {
                 q: 'Do you offer refunds?',
-                a: 'We offer a 30-day money-back guarantee on all premium plans if you\'re not satisfied.',
+                a: "We offer a 30-day money-back guarantee on all premium plans if you're not satisfied.",
               },
               {
                 q: 'Is there a long-term contract?',
@@ -235,10 +241,10 @@ export default function PricingPage() {
                 key={idx}
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
-                className="bg-white p-6 rounded-lg border border-gray-200"
+                className="card-surface p-6"
               >
-                <h3 className="font-semibold text-gray-900 mb-2">{item.q}</h3>
-                <p className="text-gray-600">{item.a}</p>
+                <h3 className="font-semibold text-foreground mb-2">{item.q}</h3>
+                <p className="text-muted-foreground">{item.a}</p>
               </motion.div>
             ))}
           </div>

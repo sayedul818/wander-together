@@ -117,10 +117,10 @@ export default function RegisterPage() {
             </span>
           </Link>
 
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h1>
-          <p className="text-gray-600 mb-8">
+          <h1 className="text-3xl font-bold text-foreground mb-2">Create Account</h1>
+          <p className="text-muted-foreground mb-8">
             Already have an account?{' '}
-            <Link href="/login" className="text-orange-500 hover:underline font-medium">
+            <Link href="/login" className="text-primary hover:underline font-medium">
               Sign in
             </Link>
           </p>
@@ -220,13 +220,13 @@ export default function RegisterPage() {
             </Button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-gray-600">
+          <p className="mt-6 text-center text-sm text-muted-foreground">
             By signing up, you agree to our{' '}
-            <Link href="#" className="text-orange-500 hover:underline">
+            <Link href="#" className="text-primary hover:underline">
               Terms of Service
             </Link>
             {' '}and{' '}
-            <Link href="#" className="text-orange-500 hover:underline">
+            <Link href="#" className="text-primary hover:underline">
               Privacy Policy
             </Link>
           </p>

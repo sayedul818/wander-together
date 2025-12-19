@@ -86,19 +86,19 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+      <div className="bg-card border-b border-border sticky top-0 z-10">
+        <div className="page-shell py-4 flex items-center justify-between">
           <div>
             <Link href="/" className="flex items-center gap-2 text-orange-500 hover:text-orange-600 mb-2">
               <ArrowLeft className="h-4 w-4" />
               Back to Home
             </Link>
-            <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+            <h1 className="text-2xl font-bold text-foreground">Admin Dashboard</h1>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-gray-700 font-medium">{user.name}</span>
+            <span className="text-foreground font-medium">{user.name}</span>
             <Button
               variant="ghost"
               onClick={handleLogout}
@@ -110,7 +110,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-12">
+      <div className="page-shell py-12">
         {/* Stats Grid */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -118,61 +118,61 @@ export default function AdminDashboard() {
           className="grid md:grid-cols-4 gap-6 mb-12"
         >
           {/* Total Users */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="card-surface rounded-lg shadow-sm border border-border p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-medium">Total Users</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">
+                <p className="text-muted-foreground text-sm font-medium">Total Users</p>
+                <p className="text-3xl font-bold text-foreground mt-2">
                   {stats?.totalUsers || 0}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Users className="h-6 w-6 text-blue-600" />
+              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-500/20 rounded-lg flex items-center justify-center">
+                <Users className="h-6 w-6 text-blue-600 dark:text-blue-300" />
               </div>
             </div>
           </div>
 
           {/* Premium Users */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="card-surface rounded-lg shadow-sm border border-border p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-medium">Premium Users</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">
+                <p className="text-muted-foreground text-sm font-medium">Premium Users</p>
+                <p className="text-3xl font-bold text-foreground mt-2">
                   {stats?.premiumUsers || 0}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-yellow-600" />
+              <div className="w-12 h-12 bg-yellow-100 dark:bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                <TrendingUp className="h-6 w-6 text-yellow-600 dark:text-yellow-300" />
               </div>
             </div>
           </div>
 
           {/* Total Trips */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="card-surface rounded-lg shadow-sm border border-border p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-medium">Total Trips</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">
+                <p className="text-muted-foreground text-sm font-medium">Total Trips</p>
+                <p className="text-3xl font-bold text-foreground mt-2">
                   {stats?.totalTrips || 0}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <MapPin className="h-6 w-6 text-green-600" />
+              <div className="w-12 h-12 bg-green-100 dark:bg-green-500/20 rounded-lg flex items-center justify-center">
+                <MapPin className="h-6 w-6 text-green-600 dark:text-green-300" />
               </div>
             </div>
           </div>
 
           {/* Active Trips */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="card-surface rounded-lg shadow-sm border border-border p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-medium">Active Trips</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">
+                <p className="text-muted-foreground text-sm font-medium">Active Trips</p>
+                <p className="text-3xl font-bold text-foreground mt-2">
                   {stats?.activeTrips || 0}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                <MapPin className="h-6 w-6 text-orange-600" />
+              <div className="w-12 h-12 bg-orange-100 dark:bg-orange-500/20 rounded-lg flex items-center justify-center">
+                <MapPin className="h-6 w-6 text-orange-600 dark:text-orange-300" />
               </div>
             </div>
           </div>
@@ -187,14 +187,14 @@ export default function AdminDashboard() {
         >
           {/* Users Management */}
           <Link href="/admin/users">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 hover:shadow-md transition cursor-pointer">
+            <div className="card-surface rounded-lg shadow-sm border border-border p-8 hover:shadow-md transition cursor-pointer">
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Users className="h-6 w-6 text-blue-600" />
+                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-500/20 rounded-lg flex items-center justify-center">
+                  <Users className="h-6 w-6 text-blue-600 dark:text-blue-300" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900">Users Management</h3>
+                <h3 className="text-xl font-bold text-foreground">Users Management</h3>
               </div>
-              <p className="text-gray-600 mb-4">
+              <p className="text-muted-foreground mb-4">
                 View, manage, and moderate user accounts. Update roles and permissions.
               </p>
               <Button className="gradient-sunset text-white">
@@ -205,14 +205,14 @@ export default function AdminDashboard() {
 
           {/* Trips Management */}
           <Link href="/admin/trips">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 hover:shadow-md transition cursor-pointer">
+            <div className="card-surface rounded-lg shadow-sm border border-border p-8 hover:shadow-md transition cursor-pointer">
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <MapPin className="h-6 w-6 text-green-600" />
+                <div className="w-12 h-12 bg-green-100 dark:bg-green-500/20 rounded-lg flex items-center justify-center">
+                  <MapPin className="h-6 w-6 text-green-600 dark:text-green-300" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900">Trips Management</h3>
+                <h3 className="text-xl font-bold text-foreground">Trips Management</h3>
               </div>
-              <p className="text-gray-600 mb-4">
+              <p className="text-muted-foreground mb-4">
                 View all trips, monitor activity, and remove inappropriate content.
               </p>
               <Button className="gradient-sunset text-white">

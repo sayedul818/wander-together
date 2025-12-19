@@ -180,7 +180,7 @@ function ProfilePageContent() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-12">
+    <div className="page-shell py-12 text-foreground">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -191,7 +191,7 @@ function ProfilePageContent() {
           <ArrowLeft className="h-4 w-4" />
           Back to Dashboard
         </Link>
-        <h1 className="text-4xl font-bold text-gray-900">My Profile</h1>
+        <h1 className="text-4xl font-bold text-foreground">My Profile</h1>
       </motion.div>
 
       <div className="grid lg:grid-cols-3 gap-8">
@@ -201,7 +201,7 @@ function ProfilePageContent() {
           animate={{ opacity: 1, x: 0 }}
           className="lg:col-span-1"
         >
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-4">
+          <div className="card-surface p-6 sticky top-4">
             {/* Avatar */}
             <div className="w-24 h-24 bg-gradient-to-br from-orange-300 to-pink-300 rounded-full mx-auto mb-4 flex items-center justify-center">
               <span className="text-3xl font-bold text-white">
@@ -210,8 +210,8 @@ function ProfilePageContent() {
             </div>
 
             {/* User Info */}
-            <h2 className="text-2xl font-bold text-gray-900 text-center mb-1">{user?.name}</h2>
-            <p className="text-gray-600 text-center mb-4">{user?.email}</p>
+            <h2 className="text-2xl font-bold text-foreground text-center mb-1">{user?.name}</h2>
+            <p className="text-muted-foreground text-center mb-4">{user?.email}</p>
 
             {/* Status Badges */}
             <div className="flex gap-2 justify-center mb-4">
@@ -230,9 +230,9 @@ function ProfilePageContent() {
             </div>
 
             {/* Rating */}
-            <div className="text-center mb-6 py-4 border-t border-b">
+            <div className="text-center mb-6 py-4 border-t border-b border-border/60">
               <div className="text-3xl font-bold text-orange-500">{(user?.rating || 0).toFixed(1)}</div>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 ({user?.reviewCount || 0} reviews)
               </p>
             </div>
@@ -255,14 +255,14 @@ function ProfilePageContent() {
           animate={{ opacity: 1, x: 0 }}
           className="lg:col-span-2"
         >
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+          <div className="card-surface p-8">
             {isEditing ? (
               <>
-                <h3 className="text-2xl font-bold text-gray-900 mb-6">Edit Profile</h3>
+                <h3 className="text-2xl font-bold text-foreground mb-6">Edit Profile</h3>
 
                 {/* Name */}
                 <div className="mb-6">
-                  <Label htmlFor="name" className="block mb-2 font-semibold">
+                  <Label htmlFor="name" className="block mb-2 font-semibold text-foreground">
                     Full Name *
                   </Label>
                   <Input
@@ -271,13 +271,13 @@ function ProfilePageContent() {
                     value={formData.name}
                     onChange={handleInputChange}
                     placeholder="Your name"
-                    className="border-gray-300"
+                    className="border-border"
                   />
                 </div>
 
                 {/* Bio */}
                 <div className="mb-6">
-                  <Label htmlFor="bio" className="block mb-2 font-semibold">
+                  <Label htmlFor="bio" className="block mb-2 font-semibold text-foreground">
                     Bio
                   </Label>
                   <textarea
@@ -287,13 +287,13 @@ function ProfilePageContent() {
                     onChange={handleInputChange}
                     placeholder="Tell us about yourself..."
                     rows={4}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-ring focus:border-transparent outline-none"
                   />
                 </div>
 
                 {/* Location */}
                 <div className="mb-6">
-                  <Label htmlFor="location" className="block mb-2 font-semibold">
+                  <Label htmlFor="location" className="block mb-2 font-semibold text-foreground">
                     Location
                   </Label>
                   <Input
@@ -302,13 +302,13 @@ function ProfilePageContent() {
                     value={formData.location}
                     onChange={handleInputChange}
                     placeholder="Your location"
-                    className="border-gray-300"
+                    className="border-border"
                   />
                 </div>
 
                 {/* Visited Countries */}
                 <div className="mb-6">
-                  <Label htmlFor="visitedCountries" className="block mb-2 font-semibold">
+                  <Label htmlFor="visitedCountries" className="block mb-2 font-semibold text-foreground">
                     Visited Countries
                   </Label>
                   <Input
@@ -317,13 +317,13 @@ function ProfilePageContent() {
                     value={formData.visitedCountries}
                     onChange={handleInputChange}
                     placeholder="e.g., France, Japan, Brazil (comma-separated)"
-                    className="border-gray-300"
+                    className="border-border"
                   />
                 </div>
 
                 {/* Interests */}
                 <div className="mb-6">
-                  <Label className="block mb-4 font-semibold">Interests</Label>
+                  <Label className="block mb-4 font-semibold text-foreground">Interests</Label>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     {INTERESTS.map(interest => (
                       <button
@@ -331,8 +331,8 @@ function ProfilePageContent() {
                         onClick={() => toggleInterest(interest)}
                         className={`px-4 py-2 rounded-lg font-medium transition ${
                           formData.interests.includes(interest)
-                            ? 'bg-orange-500 text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted text-foreground hover:bg-muted/80'
                         }`}
                       >
                         {interest}
@@ -342,7 +342,7 @@ function ProfilePageContent() {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex gap-3 pt-6 border-t">
+                <div className="flex gap-3 pt-6 border-t border-border">
                   <Button
                     onClick={handleSave}
                     disabled={isSaving}
@@ -373,55 +373,55 @@ function ProfilePageContent() {
             ) : (
               <>
                 {/* View Mode */}
-                <h3 className="text-2xl font-bold text-gray-900 mb-6">Profile Information</h3>
+                <h3 className="text-2xl font-bold text-foreground mb-6">Profile Information</h3>
 
                 <div className="space-y-6">
                   <div>
-                    <p className="text-sm text-gray-600 font-semibold mb-2">Bio</p>
-                    <p className="text-gray-900">
+                    <p className="text-sm text-muted-foreground font-semibold mb-2">Bio</p>
+                    <p className="text-foreground">
                       {user?.bio || 'No bio added yet'}
                     </p>
                   </div>
 
                   <div>
-                    <p className="text-sm text-gray-600 font-semibold mb-2">Location</p>
-                    <p className="text-gray-900">
+                    <p className="text-sm text-muted-foreground font-semibold mb-2">Location</p>
+                    <p className="text-foreground">
                       {user?.location || 'Not specified'}
                     </p>
                   </div>
 
                   <div>
-                    <p className="text-sm text-gray-600 font-semibold mb-2">Interests</p>
+                    <p className="text-sm text-muted-foreground font-semibold mb-2">Interests</p>
                     <div className="flex gap-2 flex-wrap">
                       {user?.interests && user.interests.length > 0 ? (
                         user.interests.map(interest => (
                           <span
                             key={interest}
-                            className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm"
+                            className="bg-orange-500/15 text-orange-200 px-3 py-1 rounded-full text-sm"
                           >
                             {interest}
                           </span>
                         ))
                       ) : (
-                        <p className="text-gray-600">No interests added yet</p>
+                        <p className="text-muted-foreground">No interests added yet</p>
                       )}
                     </div>
                   </div>
 
                   <div>
-                    <p className="text-sm text-gray-600 font-semibold mb-2">Visited Countries</p>
+                    <p className="text-sm text-muted-foreground font-semibold mb-2">Visited Countries</p>
                     <div className="flex gap-2 flex-wrap">
                       {user?.visitedCountries && user.visitedCountries.length > 0 ? (
                         user.visitedCountries.map(country => (
                           <span
                             key={country}
-                            className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm"
+                            className="bg-teal-500/15 text-teal-200 px-3 py-1 rounded-full text-sm"
                           >
                             {country}
                           </span>
                         ))
                       ) : (
-                        <p className="text-gray-600">No countries visited yet</p>
+                        <p className="text-muted-foreground">No countries visited yet</p>
                       )}
                     </div>
                   </div>
@@ -434,36 +434,36 @@ function ProfilePageContent() {
 
       {/* Reviews Section */}
       <div className="mt-12">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Reviews</h2>
+        <h2 className="text-2xl font-bold text-foreground mb-4">Reviews</h2>
         {isLoadingReviews ? (
           <div className="flex items-center justify-center min-h-[100px]">
             <Loader2 className="h-6 w-6 animate-spin text-orange-500" />
           </div>
         ) : reviews.length === 0 ? (
-          <div className="text-gray-600">No reviews yet.</div>
+          <div className="text-muted-foreground">No reviews yet.</div>
         ) : (
           <div className="space-y-6">
             {reviews.map((review) => (
-              <div key={review._id} className="bg-white border rounded-lg p-4 shadow-sm">
+              <div key={review._id} className="card-surface p-4">
                 <div className="flex items-center gap-3 mb-2">
                   {review.author.avatar ? (
                     <img src={review.author.avatar} alt={review.author.name} className="w-8 h-8 rounded-full object-cover" />
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-orange-200 flex items-center justify-center font-bold text-orange-700">
+                    <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center font-bold text-orange-100">
                       {review.author.name.charAt(0).toUpperCase()}
                     </div>
                   )}
-                  <span className="font-semibold text-gray-900">{review.author.name}</span>
-                  <span className="ml-auto text-xs text-gray-500">{new Date(review.createdAt).toLocaleDateString()}</span>
+                  <span className="font-semibold text-foreground">{review.author.name}</span>
+                  <span className="ml-auto text-xs text-muted-foreground">{new Date(review.createdAt).toLocaleDateString()}</span>
                 </div>
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-yellow-500 font-bold">{'★'.repeat(review.rating)}</span>
-                  <span className="text-gray-400">{'★'.repeat(5 - review.rating)}</span>
+                  <span className="text-muted-foreground/60">{'★'.repeat(5 - review.rating)}</span>
                   {review.travelPlan?.title && (
-                    <span className="ml-2 text-xs bg-gray-100 px-2 py-1 rounded">{review.travelPlan.title}</span>
+                    <span className="ml-2 text-xs bg-muted px-2 py-1 rounded text-foreground">{review.travelPlan.title}</span>
                   )}
                 </div>
-                <div className="text-gray-800">{review.comment}</div>
+                <div className="text-foreground">{review.comment}</div>
               </div>
             ))}
           </div>

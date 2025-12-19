@@ -5,13 +5,13 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 0 0% 3.6%;
+    --foreground: 0 0% 2%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.6%;
+    --card-foreground: 0 0% 2%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.6%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
+    --popover-foreground: 0 0% 2%;
+    --muted: 0 0% 93%;
+    --muted-foreground: 0 0% 48%;
     --accent: 0 84.2% 60.2%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
@@ -20,31 +20,65 @@
     --input: 0 0% 89.8%;
     --primary: 0 84.2% 60.2%;
     --primary-foreground: 0 0% 100%;
+    --primary-glow: 0 84.2% 70%;
+    --ring: 0 84.2% 60.2%;
     --secondary: 217 91.2% 59.8%;
     --secondary-foreground: 0 0% 100%;
     --radius: 0.5rem;
+
+    /* Accent palette used across gradients and UI elements */
+    --coral: 14 89% 62%;
+    --coral-light: 14 90% 70%;
+    --coral-dark: 14 85% 52%;
+    --teal: 176 71% 40%;
+    --teal-light: 176 69% 48%;
+    --gold: 42 91% 55%;
+    --gold-light: 42 92% 63%;
+    --sky: 204 89% 65%;
+    --purple: 262 60% 60%;
+    --green: 146 55% 45%;
+
+    /* Spacing tokens for consistent rhythm */
+    --section-y: 5rem;
+    --section-y-lg: 7rem;
   }
 
   .dark {
     --background: 0 0% 3.6%;
-    --foreground: 0 0% 98.2%;
-    --card: 0 0% 10.2%;
-    --card-foreground: 0 0% 98.2%;
+    --foreground: 0 0% 99.2%;
+    --card: 0 0% 9%;
+    --card-foreground: 0 0% 99.2%;
     --popover: 0 0% 10.2%;
     --popover-foreground: 0 0% 98.2%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
+    --muted: 0 0% 16%;
+    --muted-foreground: 0 0% 90%;
     --accent: 0 84.2% 60.2%;
-    --accent-foreground: 0 0% 3.6%;
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98.2%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
     --primary: 0 84.2% 60.2%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 217 91.2% 59.8%;
-    --secondary-foreground: 0 0% 3.6%;
+    --primary-glow: 0 84.2% 70%;
+    --ring: 0 84.2% 60.2%;
+    --secondary: 217 70% 48%;
+    --secondary-foreground: 0 0% 98%;
     --radius: 0.5rem;
+
+    --coral: 14 89% 62%;
+    --coral-light: 14 90% 70%;
+    --coral-dark: 14 85% 52%;
+    --teal: 176 71% 40%;
+    --teal-light: 176 69% 48%;
+    --gold: 42 91% 55%;
+    --gold-light: 42 92% 63%;
+    --sky: 204 89% 65%;
+    --purple: 262 60% 60%;
+    --green: 146 55% 45%;
+
+    --section-y: 5rem;
+    --section-y-lg: 7rem;
   }
 }
 
@@ -70,4 +104,19 @@
   transition-property: background-color, border-color, color, fill, stroke;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 200ms;
+}
+
+@layer components {
+  /* Consistent horizontal rhythm for pages/sections */
+  .page-shell {
+    @apply container px-4 sm:px-6 lg:px-10;
+  }
+
+  .section-shell {
+    @apply page-shell py-[var(--section-y)] lg:py-[var(--section-y-lg)];
+  }
+
+  .card-surface {
+    @apply bg-card text-card-foreground border border-border/50 rounded-2xl shadow-sm;
+  }
 }

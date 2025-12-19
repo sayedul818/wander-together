@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 
 export default function EditTravelPlanPage() {
@@ -21,6 +23,7 @@ export default function EditTravelPlanPage() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const fetchPlan = async () => {
@@ -57,6 +60,25 @@ export default function EditTravelPlanPage() {
 
   const handleSave = async (e: any) => {
     e.preventDefault();
+    const nextErrors: Record<string, string> = {};
+    if (!form.title.trim()) nextErrors.title = "Title is required";
+    if (!form.description.trim()) nextErrors.description = "Description is required";
+    if (!form.destination.trim()) nextErrors.destination = "Destination is required";
+    if (!form.startDate) nextErrors.startDate = "Start date is required";
+    if (!form.endDate) nextErrors.endDate = "End date is required";
+    if (form.startDate && form.endDate && form.endDate < form.startDate) {
+      nextErrors.endDate = "End date cannot be before start date";
+    }
+    if (!form.maxParticipants || Number(form.maxParticipants) < 1) {
+      nextErrors.maxParticipants = "Max participants must be at least 1";
+    }
+
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) {
+      toast.error("Please fix the highlighted fields");
+      return;
+    }
+
     setIsSaving(true);
     try {
       const res = await fetch(`/api/travel-plans/${planId}`, {
@@ -78,50 +100,75 @@ export default function EditTravelPlanPage() {
     }
   };
 
-  if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-  }
-
   return (
-    <div className="container mx-auto px-4 py-12 max-w-xl">
-      <h1 className="text-3xl font-bold mb-8">Edit Trip Plan</h1>
-      <form onSubmit={handleSave} className="space-y-6">
-        <div>
-          <label className="block mb-2 font-medium">Title</label>
-          <Input name="title" value={form.title} onChange={handleChange} required />
+    <div className="min-h-screen bg-background">
+      <div className="section-shell max-w-2xl">
+        <div className="mb-4">
+          <Button variant="ghost" onClick={() => router.push('/travel-plans')} className="flex items-center gap-2">
+            ← Back to My Trips
+          </Button>
         </div>
-        <div>
-        <div>
-          <label className="block mb-2 font-medium">Description</label>
-          <textarea
-            name="description"
-            value={form.description}
-            onChange={handleChange}
-            required
-            className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500"
-          />
+        <h1 className="text-3xl font-bold text-foreground mb-6">Edit Trip Plan</h1>
+        <div className="card-surface p-6">
+          {isLoading ? (
+            <div className="space-y-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-28 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <div className="grid md:grid-cols-2 gap-4">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+              <Skeleton className="h-10 w-40" />
+            </div>
+          ) : (
+            <form onSubmit={handleSave} className="space-y-6">
+              <div>
+                <Label className="mb-2 block">Title</Label>
+                <Input name="title" value={form.title} onChange={handleChange} required />
+                {errors.title && <p className="text-sm text-destructive mt-1">{errors.title}</p>}
+              </div>
+              <div>
+                <Label className="mb-2 block">Description</Label>
+                <textarea
+                  name="description"
+                  value={form.description}
+                  onChange={handleChange}
+                  required
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
+                  rows={4}
+                />
+                {errors.description && <p className="text-sm text-destructive mt-1">{errors.description}</p>}
+              </div>
+              <div>
+                <Label className="mb-2 block">Destination</Label>
+                <Input name="destination" value={form.destination} onChange={handleChange} required />
+                {errors.destination && <p className="text-sm text-destructive mt-1">{errors.destination}</p>}
+              </div>
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-1">
+                  <Label className="mb-2 block">Start Date</Label>
+                  <Input type="date" name="startDate" value={form.startDate} onChange={handleChange} required />
+                  {errors.startDate && <p className="text-sm text-destructive mt-1">{errors.startDate}</p>}
+                </div>
+                <div className="flex-1">
+                  <Label className="mb-2 block">End Date</Label>
+                  <Input type="date" name="endDate" value={form.endDate} onChange={handleChange} required />
+                  {errors.endDate && <p className="text-sm text-destructive mt-1">{errors.endDate}</p>}
+                </div>
+              </div>
+              <div>
+                <Label className="mb-2 block">Max Participants</Label>
+                <Input type="number" name="maxParticipants" min={1} value={form.maxParticipants} onChange={handleChange} required />
+                {errors.maxParticipants && <p className="text-sm text-destructive mt-1">{errors.maxParticipants}</p>}
+              </div>
+              <Button type="submit" className="w-full gradient-sunset text-white" disabled={isSaving}>
+                {isSaving ? "Saving..." : "Save Changes"}
+              </Button>
+            </form>
+          )}
         </div>
-          <label className="block mb-2 font-medium">Destination</label>
-          <Input name="destination" value={form.destination} onChange={handleChange} required />
-        </div>
-        <div className="flex gap-4">
-          <div className="flex-1">
-            <label className="block mb-2 font-medium">Start Date</label>
-            <Input type="date" name="startDate" value={form.startDate} onChange={handleChange} required />
-          </div>
-          <div className="flex-1">
-            <label className="block mb-2 font-medium">End Date</label>
-            <Input type="date" name="endDate" value={form.endDate} onChange={handleChange} required />
-          </div>
-        </div>
-        <div>
-          <label className="block mb-2 font-medium">Max Participants</label>
-          <Input type="number" name="maxParticipants" min={1} value={form.maxParticipants} onChange={handleChange} required />
-        </div>
-        <Button type="submit" className="w-full gradient-sunset text-white" disabled={isSaving}>
-          {isSaving ? "Saving..." : "Save Changes"}
-        </Button>
-      </form>
+      </div>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-// File: D:\projects\wander-together\app\api\admin\users\route.ts
+// File: D:\projects\TripBuddyGo\app\api\admin\users\route.ts
 import * as entry from '../../../../../../app/api/admin/users/route.js'
 import type { NextRequest } from 'next/server.js'
 

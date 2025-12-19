@@ -1,14 +1,9 @@
 {
   "pages": {
-    "/(protected)/explore/page": [
+    "/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/(protected)/explore/page.js"
-    ],
-    "/(protected)/layout": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(protected)/layout.js"
+      "static/chunks/app/page.js"
     ],
     "/layout": [
       "static/chunks/webpack.js",
@@ -21,45 +16,40 @@
       "static/chunks/main-app.js",
       "static/chunks/app/(protected)/dashboard/page.js"
     ],
-    "/page": [
+    "/(protected)/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/page.js"
-    ],
-    "/(protected)/travel-plans/[id]/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(protected)/travel-plans/[id]/page.js"
-    ],
-    "/(protected)/travel-plans/[id]/edit/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(protected)/travel-plans/[id]/edit/page.js"
+      "static/chunks/app/(protected)/layout.js"
     ],
     "/(protected)/admin/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/(protected)/admin/page.js"
     ],
-    "/(protected)/admin/trips/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(protected)/admin/trips/page.js"
-    ],
     "/(protected)/admin/users/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/(protected)/admin/users/page.js"
     ],
-    "/pricing/page": [
+    "/(protected)/admin/trips/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/pricing/page.js"
+      "static/chunks/app/(protected)/admin/trips/page.js"
     ],
     "/(protected)/profile/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/(protected)/profile/page.js"
+    ],
+    "/(protected)/explore/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(protected)/explore/page.js"
+    ],
+    "/(protected)/travel-plans/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(protected)/travel-plans/page.js"
     ],
     "/(auth)/login/page": [
       "static/chunks/webpack.js",
@@ -71,10 +61,15 @@
       "static/chunks/main-app.js",
       "static/chunks/app/(auth)/layout.js"
     ],
-    "/matchmaking/page": [
+    "/(protected)/travel-plans/[id]/edit/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/matchmaking/page.js"
+      "static/chunks/app/(protected)/travel-plans/[id]/edit/page.js"
+    ],
+    "/(protected)/travel-plans/[id]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(protected)/travel-plans/[id]/page.js"
     ]
   }
 }

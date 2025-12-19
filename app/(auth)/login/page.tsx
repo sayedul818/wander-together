@@ -87,10 +87,10 @@ export default function LoginPage() {
             </span>
           </Link>
 
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back</h1>
-          <p className="text-gray-600 mb-8">
+          <h1 className="text-3xl font-bold text-foreground mb-2">Welcome back</h1>
+          <p className="text-muted-foreground mb-8">
             Don't have an account?{' '}
-            <Link href="/register" className="text-orange-500 hover:underline font-medium">
+            <Link href="/register" className="text-primary hover:underline font-medium">
               Sign up
             </Link>
           </p>
@@ -147,15 +147,41 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          {/* <div className="mt-6 text-center text-sm text-gray-600">
-            <p className="font-medium mb-2">Demo accounts:</p>
-            <p className="mb-1">
-              <strong>User:</strong> user@example.com / user123
-            </p>
-            <p>
-              <strong>Admin:</strong> admin@travelbuddy.com / admin123
-            </p>
-          </div> */}
+          <div className="mt-6 p-4 rounded-lg bg-secondary/30 border border-border/50">
+            <p className="text-sm font-medium text-foreground mb-3">Quick Test Login:</p>
+            <div className="space-y-2 text-sm text-muted-foreground">
+              <div className="flex items-center justify-between">
+                <span><strong className="text-foreground">User:</strong> user@example.com / user123</span>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setEmail('user@example.com');
+                    setPassword('user123');
+                  }}
+                  className="ml-2"
+                >
+                  Fill
+                </Button>
+              </div>
+              <div className="flex items-center justify-between">
+                <span><strong className="text-foreground">Admin:</strong> admin@travelbuddy.com / admin123</span>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setEmail('admin@travelbuddy.com');
+                    setPassword('admin123');
+                  }}
+                  className="ml-2"
+                >
+                  Fill
+                </Button>
+              </div>
+            </div>
+          </div>
         </motion.div>
       </div>
 
