@@ -34,6 +34,7 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
+import { MessagesDropdown } from '@/components/layout/MessagesDropdown';
 import { cn } from '@/lib/utils';
 
 export function Navbar() {
@@ -128,7 +129,6 @@ export function Navbar() {
     ? [
         ...navLinks,
         { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
-        ...(user.role !== 'admin' ? [{ href: '/matchmaking', label: 'Best Matches', icon: Zap }] : []),
       ]
     : navLinks;
 
@@ -217,6 +217,7 @@ export function Navbar() {
                     </Button>
                   </Link>
                 )}
+                <MessagesDropdown />
                 <ThemeToggle className="hidden sm:inline-flex" />
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

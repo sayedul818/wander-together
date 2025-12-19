@@ -373,10 +373,14 @@ export default function TravelPlanDetailsPage() {
                   )}
                 </div>
               </div>
-              <Button variant="outline" size="sm">
-                <MessageCircle className="h-4 w-4 mr-2" />
-                Message
-              </Button>
+              <Link 
+                href={`/messages?userId=${plan.creator._id}&userName=${encodeURIComponent(plan.creator.name)}${plan.creator.avatar ? `&userAvatar=${encodeURIComponent(plan.creator.avatar)}` : ''}`}
+              >
+                <Button variant="outline" size="sm">
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  Message
+                </Button>
+              </Link>
             </div>
           </div>
 
