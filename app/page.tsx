@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
   Compass, Users, MapPin, Calendar, Star, ArrowRight,
-  Globe, Shield, Heart, CheckCircle2, Plane, Camera
+  Globe, Shield, Heart, CheckCircle2, Plane, Camera,
+  MessageCircle, Sparkles, ShieldCheck, Send
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -44,6 +45,45 @@ const howItWorks = [
   { icon: Users, title: 'Create Your Profile', description: 'Share your travel style, interests, and destinations you dream of exploring.' },
   { icon: Plane, title: 'Post Your Trip', description: 'Share your upcoming travel plans and let others discover your adventure.' },
   { icon: Heart, title: 'Find Your Buddy', description: 'Connect with travelers heading to the same destination and start planning together.' },
+];
+
+const messageHighlights = [
+  {
+    icon: Sparkles,
+    title: 'Smart intros',
+    description: 'Context-aware icebreakers pulled from profiles so you can skip the awkward hello.',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Safe by design',
+    description: 'Verified profiles, reporting, and read-receipt controls keep conversations comfortable.',
+  },
+  {
+    icon: Send,
+    title: 'Real-time sync',
+    description: 'Messages, replies, and typing states stay in lockstep across devices.',
+  },
+];
+
+const sampleConversation = [
+  {
+    sender: 'Mira · Lisbon',
+    text: "Hey! Planning to surf + cowork. Down to share an Airbnb near Cais do Sodre?",
+    time: 'Now',
+    isUser: false,
+  },
+  {
+    sender: 'You',
+    text: 'Absolutely. I land May 4th—want to split a 2BR and day-trip to Cascais?',
+    time: '1m',
+    isUser: true,
+  },
+  {
+    sender: 'Mira · Lisbon',
+    text: 'Yes! Also keen on a sunrise photo walk in Alfama if you are.',
+    time: 'Just now',
+    isUser: false,
+  },
 ];
 
 const stats = [
@@ -385,6 +425,143 @@ export default function Home() {
               No destinations available yet
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Messaging Spotlight */}
+      <section className="section-shell relative overflow-hidden">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,hsl(var(--teal)/0.12),transparent_35%),radial-gradient(circle_at_90%_10%,hsl(var(--coral)/0.18),transparent_35%),radial-gradient(circle_at_20%_80%,hsl(var(--purple)/0.12),transparent_35%)]" />
+        <div className="relative grid lg:grid-cols-2 gap-10 items-center">
+          <div className="space-y-6">
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+            >
+              <Badge className="mb-3 bg-secondary text-secondary-foreground/90">New · Messaging</Badge>
+              <h2 className="font-heading text-3xl md:text-4xl font-bold text-foreground mb-3">
+                Meet your matches, <span className="text-gradient-sunset">keep the chat flowing</span>
+              </h2>
+              <p className="text-muted-foreground max-w-xl">
+                Launch into conversations with context-rich intros, safety controls, and delightful micro-animations that make coordinating trips feel human.
+              </p>
+            </motion.div>
+
+            <div className="grid sm:grid-cols-3 gap-4">
+              {messageHighlights.map((item, i) => (
+                <motion.div
+                  key={item.title}
+                  initial={{ opacity: 0, y: 14 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.08 }}
+                  className="card-surface h-full p-4"
+                >
+                  <div className="flex items-center gap-2 mb-2 text-foreground">
+                    <item.icon className="h-5 w-5 text-coral" />
+                    <span className="font-semibold text-sm">{item.title}</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{item.description}</p>
+                </motion.div>
+              ))}
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <MotionButton
+                variant="hero"
+                size="lg"
+                asChild
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+              >
+                <Link href="/messages">
+                  Open your inbox
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Link>
+              </MotionButton>
+              <MotionButton
+                variant="outline"
+                size="lg"
+                asChild
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+              >
+                <Link href="/how-it-works">
+                  See how messaging works
+                </Link>
+              </MotionButton>
+            </div>
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className="relative"
+          >
+            <div className="absolute -inset-6 bg-gradient-to-br from-secondary/20 via-purple/10 to-coral/10 blur-3xl" />
+            <div className="relative rounded-2xl border border-border/60 bg-card/70 backdrop-blur-xl shadow-xl overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-border/60">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-primary-foreground font-semibold">
+                    MB
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground">Message Box</p>
+                    <p className="text-xs text-muted-foreground">Live · Travel matchmaking</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                  <span className="text-xs">Synced</span>
+                </div>
+              </div>
+
+              <div className="px-4 py-5 space-y-4 bg-gradient-to-b from-background via-background/80 to-secondary/10">
+                {sampleConversation.map((message, i) => (
+                  <motion.div
+                    key={message.text}
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.06 }}
+                    className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div className={`max-w-[78%] rounded-2xl px-4 py-3 shadow-sm border border-border/60 ${message.isUser ? 'bg-gradient-to-r from-secondary to-secondary/80 text-primary-foreground' : 'bg-card text-foreground'}`}>
+                      <div className="flex items-center gap-2 mb-1">
+                        <MessageCircle className={`h-4 w-4 ${message.isUser ? 'text-primary-foreground/80' : 'text-coral'}`} />
+                        <span className={`text-xs ${message.isUser ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
+                          {message.sender} · {message.time}
+                        </span>
+                      </div>
+                      <p className="text-sm leading-relaxed">{message.text}</p>
+                    </div>
+                  </motion.div>
+                ))}
+
+                <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                  <div className="h-2 w-2 rounded-full bg-secondary animate-ping" />
+                  <span>Typing indicator, delivered receipts, and inline trip cards are built in.</span>
+                </div>
+              </div>
+
+              <div className="px-4 py-3 border-t border-border/60 bg-card/80 flex items-center gap-3">
+                <input
+                  aria-label="Message composer preview"
+                  className="flex-1 bg-background/80 text-foreground rounded-xl px-3 py-2 text-sm border border-border/60 focus:outline-none focus:ring-2 focus:ring-secondary/60"
+                  placeholder="Message your next travel buddy..."
+                  readOnly
+                />
+                <button
+                  aria-label="Send message"
+                  className="h-10 w-10 rounded-xl bg-secondary text-primary-foreground flex items-center justify-center shadow-sm"
+                  type="button"
+                >
+                  <Send className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 

@@ -2,6 +2,13 @@ import { CheckCircle2, Map, Users, Shield, Sparkles } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 
+const quickTips = [
+  'Send a hello with your trip dates and vibe so people can reply fast.',
+  'Use the safety checklist before you meet—share itinerary, meet in public, verify IDs.',
+  'Create a trip post instead of a chat blast so travelers can join and stay in sync.',
+  'Pin your must-do items in the trip so the group can align expectations early.',
+];
+
 const steps = [
   {
     icon: Users,
@@ -51,6 +58,23 @@ export default function HowItWorksPage() {
                 </div>
               </div>
             ))}
+          </div>
+
+          <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-orange-50 to-teal-50 dark:from-orange-500/10 dark:to-teal-500/10 p-6 shadow-sm">
+            <div className="flex items-center gap-3 mb-4">
+              <Sparkles className="h-5 w-5 text-orange-500" />
+              <h2 className="text-lg md:text-xl font-semibold text-foreground">Quick start tips</h2>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {quickTips.map((tip) => (
+                <div key={tip} className="card-surface p-4 h-full flex items-start gap-3">
+                  <div className="mt-0.5">
+                    <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  </div>
+                  <p className="text-sm text-foreground leading-relaxed">{tip}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

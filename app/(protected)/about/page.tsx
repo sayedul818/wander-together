@@ -138,7 +138,7 @@ export default function AboutPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="section-shell relative overflow-hidden rounded-3xl bg-gradient-to-br from-orange-500 via-pink-500 to-purple-600 dark:from-orange-600 dark:via-pink-700 dark:to-purple-800 text-white shadow-2xl">
+      <section className="section-shell relative overflow-hidden rounded-3xl bg-gradient-to-br from-orange-500 via-pink-500 to-purple-600 dark:from-orange-600 dark:via-pink-700 dark:to-purple-800 text-white shadow-2xl max-w-6xl mx-auto">
         <div className="absolute inset-0 opacity-60 mix-blend-overlay bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.2),transparent_35%),radial-gradient(circle_at_80%_0%,rgba(255,255,255,0.15),transparent_30%),radial-gradient(circle_at_50%_100%,rgba(255,255,255,0.18),transparent_35%)]" />
         <div className="relative max-w-4xl mx-auto text-center space-y-6">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/15 backdrop-blur text-white text-sm font-medium">

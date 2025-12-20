@@ -65,14 +65,19 @@ function MessagesContent() {
         const res = await fetch('/api/auth/session');
         if (res.ok) {
           const data = await res.json();
-          setUser(data.user);
+          if (data.user) {
+            setUser(data.user);
+            return;
+          }
         }
+        router.replace('/login?redirect=/messages');
       } catch (error) {
         console.error('Error fetching user:', error);
+        router.replace('/login?redirect=/messages');
       }
     };
     fetchUser();
-  }, []);
+  }, [router]);
 
   // Fetch conversations
   const fetchConversations = async () => {
@@ -209,6 +214,10 @@ function MessagesContent() {
     router.push(`/messages?userId=${convUserId}`);
     setIsSidebarOpen(false);
   };
+
+  if (!user) {
+    return null;
+  }
 
   if (!userId) {
     return (
