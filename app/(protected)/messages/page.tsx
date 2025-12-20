@@ -162,18 +162,15 @@ function MessagesContent() {
     fetchUserDetails();
   }, [userId]);
 
+  // Only scroll when messages array length increases (new message arrives)
+  const prevMessageCountRef = useRef(0);
+  
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  // Ensure chat stays scrolled to bottom when viewport height changes (mobile keyboard)
-  useEffect(() => {
-    const handleResize = () => {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+    if (messages.length > prevMessageCountRef.current && prevMessageCountRef.current > 0) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+    }
+    prevMessageCountRef.current = messages.length;
+  }, [messages.length]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -448,7 +445,7 @@ function MessagesContent() {
 
         {/* Chat Area - Shows when user is selected */}
         {userId && selectedUser && (
-          <div className="flex-1 flex flex-col bg-background rounded-r-xl overflow-hidden min-h-0">
+          <div className="flex-1 flex flex-col bg-background rounded-r-xl overflow-hidden">
             {/* Chat Header */}
             <div className="flex items-center gap-3 p-4 border-b border-border bg-card">
               {/* Back button for mobile */}
@@ -479,7 +476,7 @@ function MessagesContent() {
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 space-y-3">
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-muted-foreground">
               {isLoading ? (
                 <div className="flex items-center justify-center h-full">
                   <Loader2 className="h-6 w-6 animate-spin text-orange-500" />
@@ -523,7 +520,7 @@ function MessagesContent() {
             </div>
 
             {/* Input Area */}
-            <div className="sticky bottom-0 z-10 border-t border-border p-4 bg-card pb-[env(safe-area-inset-bottom)]">
+            <div className="border-t border-border p-4 bg-card">
               <form onSubmit={handleSendMessage} className="flex gap-2">
                 <Textarea
                   value={newMessage}
