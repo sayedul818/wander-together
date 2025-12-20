@@ -212,17 +212,17 @@ function MessagesContent() {
 
   if (!userId) {
     return (
-      <div className="bg-background">
-        <div className="page-shell min-h-[calc(100dvh-4rem)] flex pt-6 pb-[env(safe-area-inset-bottom)] overflow-hidden">
+      <div className="h-[calc(100vh-4rem)] flex flex-col overflow-hidden">
+        <div className="flex-1 flex overflow-hidden">
+          <div className="page-shell flex-1 flex pt-6 pb-6">
           {/* Sidebar */}
-          <div className="w-full lg:w-80 xl:w-96 border-r border-border bg-card flex-shrink-0 rounded-l-xl overflow-hidden">
+          <div className="w-full lg:w-80 xl:w-96 border-r border-border bg-card flex-shrink-0 rounded-l-xl overflow-hidden flex flex-col">
             <div className="flex flex-col h-full">
               {/* Sidebar Header */}
-              <div className="p-4 border-b border-border">
+              <div className="p-4 border-b border-border flex-shrink-0">
                 <h2 className="text-xl font-bold text-foreground mb-4">Messages</h2>
                 {/* Search */}
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <div className="relative">\n                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     type="text"
                     placeholder="Search conversations..."
@@ -343,16 +343,18 @@ function MessagesContent() {
             </div>
           </div>
         </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-background">
-      <div className="page-shell min-h-[calc(100dvh-4rem)] flex pt-6 pb-[env(safe-area-inset-bottom)] overflow-hidden">
+    <div className="h-[calc(100vh-4rem)] flex flex-col overflow-hidden">
+      <div className="flex-1 flex overflow-hidden">
+        <div className="page-shell flex-1 flex pt-6 pb-6">
         {/* Sidebar - Hidden on mobile when chat is open */}
-        <div className={`${userId ? 'hidden' : 'flex'} lg:flex w-full lg:w-80 xl:w-96 border-r border-border bg-card flex-shrink-0 rounded-l-xl overflow-hidden`}>
-          <div className="flex flex-col h-full w-full">
+        <div className={`${userId ? 'hidden' : 'flex'} lg:flex w-full lg:w-80 xl:w-96 border-r border-border bg-card flex-shrink-0 rounded-l-xl overflow-hidden flex-col`}>
+          <div className="flex flex-col h-full">
             {/* Sidebar Header */}
             <div className="p-4 border-b border-border">
               <h2 className="text-xl font-bold text-foreground mb-4">Messages</h2>
@@ -445,9 +447,9 @@ function MessagesContent() {
 
         {/* Chat Area - Shows when user is selected */}
         {userId && selectedUser && (
-          <div className="flex-1 flex flex-col bg-background rounded-r-xl overflow-hidden">
+          <div className="flex-1 flex flex-col bg-background rounded-r-xl overflow-hidden min-h-0">
             {/* Chat Header */}
-            <div className="flex items-center gap-3 p-4 border-b border-border bg-card">
+            <div className="flex items-center gap-3 p-4 border-b border-border bg-card flex-shrink-0">
               {/* Back button for mobile */}
               <button
                 onClick={() => router.push('/messages')}
@@ -520,7 +522,7 @@ function MessagesContent() {
             </div>
 
             {/* Input Area */}
-            <div className="border-t border-border p-4 bg-card">
+            <div className="border-t border-border p-4 bg-card flex-shrink-0">
               <form onSubmit={handleSendMessage} className="flex gap-2">
                 <Textarea
                   value={newMessage}
@@ -560,6 +562,7 @@ function MessagesContent() {
             </div>
           </div>
         )}
+      </div>
       </div>
     </div>
   );
