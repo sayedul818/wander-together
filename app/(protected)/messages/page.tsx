@@ -166,6 +166,15 @@ function MessagesContent() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Ensure chat stays scrolled to bottom when viewport height changes (mobile keyboard)
+  useEffect(() => {
+    const handleResize = () => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -439,7 +448,7 @@ function MessagesContent() {
 
         {/* Chat Area - Shows when user is selected */}
         {userId && selectedUser && (
-          <div className="flex-1 flex flex-col bg-background rounded-r-xl overflow-hidden">
+          <div className="flex-1 flex flex-col bg-background rounded-r-xl overflow-hidden min-h-0">
             {/* Chat Header */}
             <div className="flex items-center gap-3 p-4 border-b border-border bg-card">
               {/* Back button for mobile */}
@@ -470,7 +479,7 @@ function MessagesContent() {
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 space-y-3">
               {isLoading ? (
                 <div className="flex items-center justify-center h-full">
                   <Loader2 className="h-6 w-6 animate-spin text-orange-500" />
@@ -514,7 +523,7 @@ function MessagesContent() {
             </div>
 
             {/* Input Area */}
-            <div className="border-t border-border p-4 bg-card">
+            <div className="sticky bottom-0 z-10 border-t border-border p-4 bg-card pb-[env(safe-area-inset-bottom)]">
               <form onSubmit={handleSendMessage} className="flex gap-2">
                 <Textarea
                   value={newMessage}
