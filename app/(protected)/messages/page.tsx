@@ -55,7 +55,9 @@ function MessagesContent() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedUserData, setSelectedUserData] = useState<{_id: string; name: string; email: string; avatar?: string} | null>(null);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const selectedUser = conversations.find(conv => conv.user._id === userId)?.user || selectedUserData;
 
@@ -99,6 +101,37 @@ function MessagesContent() {
   useEffect(() => {
     fetchConversations();
   }, []);
+
+  // Handle mobile keyboard appearance/disappearance
+  useEffect(() => {
+    const handleViewportChange = () => {
+      if (typeof window !== 'undefined' && window.visualViewport) {
+        const viewport = window.visualViewport;
+        const windowHeight = window.innerHeight;
+        const viewportHeight = viewport.height;
+        const keyboard = windowHeight - viewportHeight;
+        setKeyboardHeight(keyboard > 0 ? keyboard : 0);
+      }
+    };
+
+    if (typeof window !== 'undefined' && window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleViewportChange);
+      window.visualViewport.addEventListener('scroll', handleViewportChange);
+      return () => {
+        window.visualViewport?.removeEventListener('resize', handleViewportChange);
+        window.visualViewport?.removeEventListener('scroll', handleViewportChange);
+      };
+    }
+  }, []);
+
+  // Scroll to bottom when keyboard appears or messages change
+  useEffect(() => {
+    if (messagesEndRef.current && messages.length > 0) {
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+      }, 100);
+    }
+  }, [keyboardHeight, messages.length]);
 
   // Filter conversations
   useEffect(() => {
@@ -456,7 +489,10 @@ function MessagesContent() {
 
         {/* Chat Area - Shows when user is selected */}
         {userId && selectedUser && (
-          <div className="flex-1 flex flex-col bg-background rounded-none lg:rounded-r-xl overflow-hidden min-h-0">
+          <div 
+            className="flex-1 flex flex-col bg-background rounded-none lg:rounded-r-xl overflow-hidden min-h-0 fixed lg:static inset-0 top-0 bottom-0 left-0 right-0 lg:inset-auto z-40"
+            style={{ paddingBottom: `${keyboardHeight}px` }}
+          >
             {/* Chat Header */}
             <div className="flex items-center gap-3 p-4 border-b border-border bg-card flex-shrink-0">
               {/* Back button for mobile */}
@@ -487,7 +523,10 @@ function MessagesContent() {
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-muted-foreground">
+            <div 
+              ref={messagesContainerRef}
+              className="flex-1 overflow-y-auto p-4 space-y-3 pb-24 lg:pb-3 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-muted-foreground"
+            >
               {isLoading ? (
                 <div className="flex items-center justify-center h-full">
                   <Loader2 className="h-6 w-6 animate-spin text-orange-500" />
@@ -530,8 +569,8 @@ function MessagesContent() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input Area */}
-            <div className="border-t border-border p-4 bg-card flex-shrink-0">
+            {/* Input Area - Fixed on mobile, relative on desktop */}
+            <div className="border-t border-border p-4 bg-card flex-shrink-0 fixed lg:static bottom-0 left-0 right-0 w-full lg:w-auto lg:bottom-auto safe-area-inset-bottom" style={{ bottom: `${keyboardHeight}px` }}>
               <form onSubmit={handleSendMessage} className="flex gap-2">
                 <Textarea
                   value={newMessage}
