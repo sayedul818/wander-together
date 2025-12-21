@@ -11,6 +11,7 @@ export async function POST(
   { params }: { params: { postId: string } }
 ) {
   try {
+    const allowedReactions = ['like', 'love', 'care', 'haha', 'wow', 'sad', 'angry'] as const;
     await connectDB();
     const session = await getSession();
     
@@ -21,9 +22,19 @@ export async function POST(
     const { postId } = params;
     const { reactionType } = await req.json();
 
+    // Guard against stale/invalid reaction values (old seeds like "adventure")
+    if (!allowedReactions.includes(reactionType)) {
+      return NextResponse.json({ error: 'Invalid reaction type' }, { status: 400 });
+    }
+
     const post = await Post.findById(postId);
     if (!post) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+    }
+
+    // Clean up any legacy reactions that are no longer allowed to prevent validation failures
+    if (post.reactions?.length) {
+      post.reactions = post.reactions.filter((r: any) => allowedReactions.includes(r.type));
     }
 
     // Check if user already reacted

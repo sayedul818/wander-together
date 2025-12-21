@@ -8,11 +8,7 @@ import { Types } from 'mongoose';
 export async function GET(req: NextRequest) {
   try {
     await connectDB();
-    const session = await getSession();
-    
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const session = await getSession(); // may be null for public viewers
 
     const { searchParams } = new URL(req.url);
     const scope = (searchParams.get('scope') || 'global').toLowerCase();
@@ -22,6 +18,9 @@ export async function GET(req: NextRequest) {
 
     let query: any;
     if (scope === 'following') {
+      if (!session?.userId) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
       // Get user's following list
       const user = await User.findById(session.userId).select('following');
       const followingIds = user?.following || [];
@@ -31,7 +30,7 @@ export async function GET(req: NextRequest) {
         privacy: { $in: ['public', 'friends'] },
       };
     } else {
-      // Global public posts
+      // Global public posts (no auth required)
       query = { privacy: 'public' };
     }
 
