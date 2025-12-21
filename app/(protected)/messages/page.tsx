@@ -58,6 +58,7 @@ function MessagesContent() {
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const inputContainerRef = useRef<HTMLDivElement>(null);
 
   const selectedUser = conversations.find(conv => conv.user._id === userId)?.user || selectedUserData;
 
@@ -102,15 +103,33 @@ function MessagesContent() {
     fetchConversations();
   }, []);
 
-  // Handle mobile keyboard appearance/disappearance
+  // Handle mobile keyboard appearance/disappearance with smooth animation
   useEffect(() => {
     const handleViewportChange = () => {
       if (typeof window !== 'undefined' && window.visualViewport) {
         const viewport = window.visualViewport;
         const windowHeight = window.innerHeight;
         const viewportHeight = viewport.height;
-        const keyboard = windowHeight - viewportHeight;
-        setKeyboardHeight(keyboard > 0 ? keyboard : 0);
+        const keyboard = Math.max(0, windowHeight - viewportHeight);
+        setKeyboardHeight(keyboard);
+
+        // Apply smooth transform to input container on mobile only
+        if (inputContainerRef.current && typeof window !== 'undefined') {
+          const isMobile = window.innerWidth < 1024; // lg breakpoint
+          if (isMobile) {
+            // Use transform for smooth animation without layout reflow
+            inputContainerRef.current.style.transform = `translateY(-${keyboard}px)`;
+          } else {
+            inputContainerRef.current.style.transform = 'translateY(0)';
+          }
+        }
+
+        // Scroll messages to bottom when keyboard appears
+        if (messagesContainerRef.current && keyboard > 0) {
+          setTimeout(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+          }, 50);
+        }
       }
     };
 
@@ -491,7 +510,6 @@ function MessagesContent() {
         {userId && selectedUser && (
           <div 
             className="flex-1 flex flex-col bg-background rounded-none lg:rounded-r-xl overflow-hidden min-h-0 fixed lg:static inset-0 top-0 bottom-0 left-0 right-0 lg:inset-auto z-40"
-            style={{ paddingBottom: `${keyboardHeight}px` }}
           >
             {/* Chat Header */}
             <div className="flex items-center gap-3 p-4 border-b border-border bg-card flex-shrink-0">
@@ -570,7 +588,15 @@ function MessagesContent() {
             </div>
 
             {/* Input Area - Fixed on mobile, relative on desktop */}
-            <div className="border-t border-border p-4 bg-card flex-shrink-0 fixed lg:static bottom-0 left-0 right-0 w-full lg:w-auto lg:bottom-auto safe-area-inset-bottom" style={{ bottom: `${keyboardHeight}px` }}>
+            <div 
+              ref={inputContainerRef}
+              className="border-t border-border p-4 bg-card flex-shrink-0 fixed lg:static bottom-0 left-0 right-0 w-full lg:w-auto lg:bottom-auto z-50"
+              style={{
+                transform: `translateY(-${Math.max(0, keyboardHeight)}px)`,
+                transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                paddingBottom: window !== undefined && window.innerWidth < 1024 ? 'calc(1rem + max(0px, env(safe-area-inset-bottom)))' : '1rem'
+              }}
+            >
               <form onSubmit={handleSendMessage} className="flex gap-2">
                 <Textarea
                   value={newMessage}
