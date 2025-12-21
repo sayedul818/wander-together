@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Heart, MessageCircle, Share2, Loader2, MoreVertical,
   Image as ImageIcon, Video, MapPin, Calendar, Sparkles, Pencil, Trash2, Flag,
-  ThumbsUp, Smile, PartyPopper, Plane, Frown, Angry
+  ThumbsUp, Smile, PartyPopper, Plane, Frown, Angry, X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -49,6 +49,9 @@ interface Post {
 
 import LeftSidebar from '@/components/layout/LeftSidebar';
 import RightSidebar from '@/components/layout/RightSidebar';
+import PostComposerBar from '@/components/PostComposerBar';
+import PostCreateModal from '@/components/PostCreateModal';
+import StoriesCarousel from '@/components/StoriesCarousel';
 
 export default function FeedPage() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -74,6 +77,7 @@ export default function FeedPage() {
   const [expandedPosts, setExpandedPosts] = useState<Record<string, boolean>>({});
   const observerTarget = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showPostModal, setShowPostModal] = useState(false);
 
 
   // Reaction types with emojis and colors
@@ -229,6 +233,57 @@ export default function FeedPage() {
 
   const handleReaction = async (postId: string, reactionType: string) => {
     try {
+      const post = posts.find((p) => p._id === postId);
+      if (!post) return;
+      
+      const currentUserId = currentUser?._id?.toString?.() || currentUser?.id || currentUser?._id;
+      const existingReaction = post.reactions?.find((r: any) => (r.userId?._id || r.userId)?.toString() === (currentUserId as string));
+
+      // Optimistically update local state before sending to server
+      if (existingReaction) {
+        if (existingReaction.type === reactionType) {
+          // Remove reaction
+          setPosts((prev) =>
+            prev.map((p) =>
+              p._id === postId
+                ? { ...p, reactions: p.reactions?.filter((r: any) => (r.userId?._id || r.userId)?.toString() !== (currentUserId as string)) }
+                : p
+            )
+          );
+        } else {
+          // Update reaction type
+          setPosts((prev) =>
+            prev.map((p) =>
+              p._id === postId
+                ? {
+                    ...p,
+                    reactions: p.reactions?.map((r: any) =>
+                      (r.userId?._id || r.userId)?.toString() === (currentUserId as string)
+                        ? { ...r, type: reactionType }
+                        : r
+                    ),
+                  }
+                : p
+            )
+          );
+        }
+      } else {
+        // Add new reaction
+        setPosts((prev) =>
+          prev.map((p) =>
+            p._id === postId
+              ? {
+                  ...p,
+                  reactions: [
+                    ...(p.reactions || []),
+                    { userId: currentUser, type: reactionType, createdAt: new Date().toISOString() },
+                  ],
+                }
+              : p
+          )
+        );
+      }
+
       const res = await fetch(`/api/posts/${postId}/reactions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -407,101 +462,10 @@ export default function FeedPage() {
             <LeftSidebar />
           </div>
           <div className="space-y-6">
-          {/* Post Composer */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="card-surface p-4 md:p-6 space-y-4"
-          >
-            <div className="flex items-start gap-3 md:gap-4">
-              <Avatar className="h-10 w-10 md:h-12 md:w-12 flex-shrink-0">
-                <AvatarImage src={currentUser?.avatar || ''} alt={currentUser?.name || 'You'} />
-                <AvatarFallback>{currentUser?.name?.slice(0, 2)?.toUpperCase() || 'TB'}</AvatarFallback>
-              </Avatar>
-              <form onSubmit={handlePostSubmit} className="flex-1 space-y-3 w-full">
-                <Textarea
-                  placeholder="What's on your mind? Share a trip update..."
-                  value={postContent}
-                  onChange={(e) => setPostContent(e.target.value)}
-                  className="resize-none w-full text-sm md:text-base"
-                  rows={3}
-                />
-                {previews.length > 0 && (
-                  <div className="grid grid-cols-2 gap-2">
-                    {previews.map((src, idx) => (
-                      <div key={idx} className="relative h-32 rounded-lg overflow-hidden">
-                        <img src={src} className="w-full h-full object-cover" alt="preview" />
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {videoPreview && (
-                  <div className="relative rounded-lg overflow-hidden">
-                    <video src={videoPreview} controls className="w-full" />
-                  </div>
-                )}
-                <div className="space-y-2">
-                  <label className="text-sm text-muted-foreground block">Tag trip:</label>
-                  <select
-                    value={tripId}
-                    onChange={(e) => setTripId(e.target.value)}
-                    className="w-full text-sm px-3 py-2 rounded-md border border-border bg-background"
-                  >
-                    <option value="">None</option>
-                    {myTrips.map((t) => (
-                      <option key={t._id} value={t._id}>{t.title} • {t.destination}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="flex flex-col md:flex-row items-center justify-between gap-3 pt-3 border-t border-border/60">
-                  <div className="flex gap-2 w-full md:w-auto">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="text-muted-foreground hover:text-secondary text-xs md:text-sm"
-                      onClick={() => onPickFiles('image/*')}
-                    >
-                      <ImageIcon className="h-4 w-4 mr-1 md:mr-2" />
-                      <span className="hidden sm:inline">Photo</span>
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="text-muted-foreground hover:text-secondary text-xs md:text-sm"
-                      onClick={() => onPickFiles('video/*')}
-                    >
-                      <Video className="h-4 w-4 mr-1 md:mr-2" />
-                      <span className="hidden sm:inline">Video</span>
-                    </Button>
-                  </div>
-                  <Button
-                    type="submit"
-                    className="gradient-sunset text-white w-full md:w-auto"
-                    disabled={( !postContent.trim() && previews.length === 0 && !videoPreview ) || isPosting}
-                    size="sm"
-                  >
-                    {isPosting ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <>
-                        <Sparkles className="h-4 w-4 mr-1 md:mr-2" />
-                        Post
-                      </>
-                    )}
-                  </Button>
-                </div>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  className="hidden"
-                  onChange={onFilesSelected}
-                  multiple
-                />
-              </form>
-            </div>
-          </motion.div>
+          {/* Post Composer (new) */}
+          <PostComposerBar currentUser={currentUser} onOpen={() => setShowPostModal(true)} />
+
+          <StoriesCarousel />
 
           {/* Feed */}
           <div className="space-y-4">
@@ -712,8 +676,11 @@ export default function FeedPage() {
                         <div className="overflow-y-auto p-4 space-y-3">
                           {post.reactions?.map((reaction: any, idx: number) => {
                             const reactionConfig = reactionTypes.find(rt => rt.type === reaction.type);
+                            const currentUserId = currentUser?._id?.toString?.() || currentUser?.id || currentUser?._id;
+                            const isOwnReaction = (reaction.userId?._id || reaction.userId)?.toString() === (currentUserId as string);
+                            
                             return (
-                              <div key={idx} className="flex items-center gap-3">
+                              <div key={idx} className="flex items-center gap-3 group">
                                 <Link href={`/profile/${reaction.userId?._id || reaction.userId}`}>
                                   <Avatar className="h-10 w-10">
                                     <AvatarImage src={reaction.userId?.avatar} alt={reaction.userId?.name || 'User'} />
@@ -727,8 +694,19 @@ export default function FeedPage() {
                                     </p>
                                   </Link>
                                 </div>
-                                <div className={`${reactionConfig?.color || 'text-muted-foreground'} text-lg`}>
-                                  {reactionConfig?.emoji || '👍'}
+                                <div className="flex items-center gap-2">
+                                  <div className={`${reactionConfig?.color || 'text-muted-foreground'} text-lg`}>
+                                    {reactionConfig?.emoji || '👍'}
+                                  </div>
+                                  {isOwnReaction && (
+                                    <button
+                                      onClick={() => handleReaction(post._id, reaction.type)}
+                                      className="rounded-md p-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition"
+                                      title="Remove your reaction"
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </button>
+                                  )}
                                 </div>
                               </div>
                             );
@@ -840,6 +818,14 @@ export default function FeedPage() {
           setPosts((prev) => prev.map((p) => (p._id === updatedPost._id ? updatedPost : p)));
           setSelectedPostModal(updatedPost);
         }}
+      />
+
+      {/* Create Post Modal */}
+      <PostCreateModal
+        open={showPostModal}
+        onClose={() => setShowPostModal(false)}
+        currentUser={currentUser}
+        onCreated={(newPost) => setPosts((prev) => [newPost, ...prev])}
       />
     </div>
   );
