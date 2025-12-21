@@ -35,6 +35,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { MessagesDropdown } from '@/components/layout/MessagesDropdown';
+import { NotificationsDropdown } from '@/components/layout/NotificationsDropdown';
 import { cn } from '@/lib/utils';
 
 export function Navbar() {
@@ -90,12 +91,6 @@ export function Navbar() {
     }
   };
 
-  const navLinks = [
-    { href: '/', label: 'Home', icon: Home },
-    { href: '/explore', label: 'Explore', icon: MapPin },
-    ...(user ? [] : [{ href: '/about', label: 'About', icon: Info }]),
-  ];
-
   const megaMenuSections = [
     {
       title: 'Trips',
@@ -124,13 +119,21 @@ export function Navbar() {
     },
   ];
 
-  // Add dashboard link for logged-in users
-  const userNavLinks = user
+  // Desired order: Feed, Explore, Discover, Dashboard
+  const leftLinks = user
     ? [
-        ...navLinks,
+        { href: '/feed', label: 'Feed', icon: Heart },
+        { href: '/explore', label: 'Explore', icon: MapPin },
+      ]
+    : [
+        { href: '/explore', label: 'Explore', icon: MapPin },
+      ];
+
+  const afterDiscoverLinks = user
+    ? [
         { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
       ]
-    : navLinks;
+    : [];
 
   const isActive = (href: string) => pathname === href;
 
@@ -138,8 +141,8 @@ export function Navbar() {
     <nav className="bg-white/90 dark:bg-background/90 border-b border-gray-200/70 dark:border-border sticky top-0 z-50 backdrop-blur-md">
       <div className="page-shell">
         <div className="flex h-16 items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
+          {/* Logo - Go to feed if logged in, home if not */}
+          <Link href={user ? '/feed' : '/'} className="flex items-center gap-2">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl gradient-sunset shadow-md">
               <Compass className="h-6 w-6 text-white" />
             </div>
@@ -152,7 +155,7 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-2">
             <NavigationMenu.Root className="relative">
               <NavigationMenu.List className="flex items-center gap-1">
-                {userNavLinks.map((link) => (
+                {leftLinks.map((link) => (
                   <NavigationMenu.Item key={link.href}>
                     <NavigationMenu.Link asChild>
                       <Link
@@ -200,6 +203,25 @@ export function Navbar() {
                     </div>
                   </NavigationMenu.Content>
                 </NavigationMenu.Item>
+
+                {afterDiscoverLinks.map((link) => (
+                  <NavigationMenu.Item key={link.href}>
+                    <NavigationMenu.Link asChild>
+                      <Link
+                        href={link.href}
+                        className={cn(
+                          'px-4 py-2 rounded-lg transition-colors flex items-center gap-2',
+                          isActive(link.href)
+                            ? 'bg-orange-100 text-orange-600 dark:bg-orange-500/20 dark:text-orange-200'
+                            : 'text-gray-600 dark:text-muted-foreground hover:text-gray-900 dark:hover:text-foreground hover:bg-gray-100 dark:hover:bg-border/70'
+                        )}
+                      >
+                        <link.icon className="h-4 w-4" />
+                        {link.label}
+                      </Link>
+                    </NavigationMenu.Link>
+                  </NavigationMenu.Item>
+                ))}
               </NavigationMenu.List>
               <NavigationMenu.Viewport className="absolute left-1/2 top-12 h-0 w-0" />
             </NavigationMenu.Root>
@@ -209,6 +231,7 @@ export function Navbar() {
           <div className="flex items-center gap-4">
             {!isLoading && user ? (
               <>
+                <NotificationsDropdown />
                 {user.role === 'admin' && (
                   <Link href="/admin">
                     <Button variant="ghost" size="sm" className="hidden sm:flex">
@@ -227,13 +250,13 @@ export function Navbar() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => router.push('/profile')}>
-                      Profile
+                    <DropdownMenuItem onClick={() => router.push('/my-profile')}>
+                      My Profile
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => router.push('/pricing')}>
                       Premium Membership
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => router.push('/profile?edit=true')}>
+                    <DropdownMenuItem onClick={() => router.push('/my-profile?edit=true')}>
                       Edit Profile
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
@@ -278,26 +301,6 @@ export function Navbar() {
         {isOpen && (
           <div className="md:hidden border-t border-border py-4 space-y-4 bg-background">
             <div className="space-y-1">
-              <div className="px-4 text-xs uppercase tracking-wide text-muted-foreground font-semibold">Navigation</div>
-              {userNavLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={cn(
-                    'flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors',
-                    isActive(link.href)
-                      ? 'bg-orange-100 text-orange-600 dark:bg-orange-500/20 dark:text-orange-200'
-                      : 'text-foreground hover:bg-muted'
-                  )}
-                  onClick={() => setIsOpen(false)}
-                >
-                  <link.icon className="h-5 w-5" />
-                  <span className="font-medium">{link.label}</span>
-                </Link>
-              ))}
-            </div>
-
-            <div className="space-y-1">
               <button
                 onClick={() => setIsDiscoverOpen(!isDiscoverOpen)}
                 className="w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-foreground hover:bg-muted transition-colors"
@@ -334,6 +337,44 @@ export function Navbar() {
                 </div>
               )}
             </div>
+
+            {/* Mobile navigation links before Discover */}
+            <div className="space-y-1">
+              <div className="px-4 text-xs uppercase tracking-wide text-muted-foreground font-semibold">Navigation</div>
+              {(user ? [
+                { href: '/feed', label: 'Feed', icon: Heart },
+                { href: '/explore', label: 'Explore', icon: MapPin },
+              ] : [
+                { href: '/explore', label: 'Explore', icon: MapPin },
+              ]).map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={cn(
+                    'flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors',
+                    isActive(link.href)
+                      ? 'bg-orange-100 text-orange-600 dark:bg-orange-500/20 dark:text-orange-200'
+                      : 'text-foreground hover:bg-muted'
+                  )}
+                  onClick={() => setIsOpen(false)}
+                >
+                  <link.icon className="h-5 w-5" />
+                  <span className="font-medium">{link.label}</span>
+                </Link>
+              ))}
+            </div>
+
+            {/* Mobile Dashboard link after Discover */}
+            {user && (
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-foreground hover:bg-muted transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                <BarChart3 className="h-5 w-5" />
+                <span className="font-medium">Dashboard</span>
+              </Link>
+            )}
 
             {user?.role === 'admin' && (
               <Link

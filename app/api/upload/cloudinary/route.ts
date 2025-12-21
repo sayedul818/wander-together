@@ -12,6 +12,7 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;
+    const folder = (formData.get('folder') as string) || 'posts';
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
@@ -21,12 +22,16 @@ export async function POST(request: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
+    // Detect resource type (image/video)
+    const mime = file.type || '';
+    const resourceType = mime.startsWith('video') ? 'video' : 'image';
+
     // Upload to Cloudinary
     const result = await new Promise((resolve, reject) => {
       cloudinary.uploader.upload_stream(
         {
-          folder: 'trip-plans',
-          resource_type: 'image',
+          folder,
+          resource_type: resourceType,
         },
         (error, result) => {
           if (error) reject(error);
@@ -38,6 +43,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       url: (result as any).secure_url,
       publicId: (result as any).public_id,
+      resourceType,
     });
   } catch (error) {
     console.error('Upload error:', error);

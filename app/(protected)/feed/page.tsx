@@ -1,0 +1,837 @@
+'use client';
+
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Heart, MessageCircle, Share2, Loader2, MoreVertical,
+  Image as ImageIcon, Video, MapPin, Calendar, Sparkles, Pencil, Trash2, Flag,
+  ThumbsUp, Smile, PartyPopper, Plane, Frown, Angry
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import Image from 'next/image';
+import Link from 'next/link';
+import { toast } from 'sonner';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+
+interface Post {
+  _id: string;
+  userId: {
+    _id: string;
+    name: string;
+    avatar?: string;
+    location?: string;
+  };
+  content: string;
+  postType: 'text' | 'image' | 'video' | 'memory';
+  images?: string[];
+  videoUrl?: string;
+  location?: string;
+  tripId?: {
+    _id: string;
+    title: string;
+    destination: string;
+  };
+  reactions?: Array<{ userId: string; type: string }>;
+  comments?: Array<{ _id: string; userId: any; content: string; createdAt: string }>;
+  privacy: string;
+  createdAt: string;
+}
+
+import LeftSidebar from '@/components/layout/LeftSidebar';
+import RightSidebar from '@/components/layout/RightSidebar';
+
+export default function FeedPage() {
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [page, setPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [postContent, setPostContent] = useState('');
+  const [isPosting, setIsPosting] = useState(false);
+  const [files, setFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
+  const [videoPreview, setVideoPreview] = useState<string | null>(null);
+  const [tripId, setTripId] = useState<string>('');
+  const [myTrips, setMyTrips] = useState<Array<{ _id: string; title: string; destination: string }>>([]);
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState<string>('');
+  const [openCommentsFor, setOpenCommentsFor] = useState<Record<string, boolean>>({});
+  const [newComment, setNewComment] = useState<Record<string, string>>({});
+  const [replyInputs, setReplyInputs] = useState<Record<string, string>>({});
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [showReactionPicker, setShowReactionPicker] = useState<string | null>(null);
+  const [showReactorsModal, setShowReactorsModal] = useState<string | null>(null);
+  const observerTarget = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Reaction types with icons and colors
+  const reactionTypes = [
+    { type: 'like', icon: ThumbsUp, label: 'Like', color: 'text-blue-500' },
+    { type: 'love', icon: Heart, label: 'Love', color: 'text-red-500' },
+    { type: 'wow', icon: PartyPopper, label: 'Wow', color: 'text-yellow-500' },
+    { type: 'adventure', icon: Plane, label: 'Adventure', color: 'text-green-500' },
+    { type: 'sad', icon: Frown, label: 'Sad', color: 'text-gray-500' },
+    { type: 'angry', icon: Angry, label: 'Angry', color: 'text-orange-500' },
+  ];
+
+  const fetchPosts = useCallback(async (pageNum: number) => {
+    try {
+      setIsLoading(true);
+      const res = await fetch(`/api/posts?page=${pageNum}&limit=10`);
+      if (res.ok) {
+        const data = await res.json();
+        if (pageNum === 1) {
+          setPosts(data.posts);
+        } else {
+          setPosts((prev) => [...prev, ...data.posts]);
+        }
+        setHasMore(pageNum < data.pages);
+      }
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+      toast.error('Failed to load posts');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPosts(1);
+  }, [fetchPosts]);
+
+  // Fetch current user for composer avatar
+  useEffect(() => {
+    const fetchMe = async () => {
+      try {
+        const res = await fetch('/api/auth/session');
+        if (res.ok) {
+          const data = await res.json();
+          setCurrentUser(data.user);
+        }
+      } catch {}
+    };
+    fetchMe();
+  }, []);
+
+  // Fetch trips for tagging
+  useEffect(() => {
+    const fetchTrips = async () => {
+      try {
+        const s = await fetch('/api/auth/session');
+        if (!s.ok) return;
+        const session = await s.json();
+        const uid = session?.userId || session?.user?.id;
+        if (!uid) return;
+        const res = await fetch(`/api/travel-plans?participant=${uid}&limit=50`);
+        if (res.ok) {
+          const data = await res.json();
+          const plans = (data.plans || []).map((p: any) => ({ _id: p._id, title: p.title, destination: p.destination }));
+          setMyTrips(plans);
+        }
+      } catch {}
+    };
+    fetchTrips();
+  }, []);
+
+  // Infinite scroll observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoading) {
+          setPage((prev) => prev + 1);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasMore, isLoading]);
+
+  useEffect(() => {
+    if (page > 1) {
+      fetchPosts(page);
+    }
+  }, [page, fetchPosts]);
+
+  const handlePostSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!postContent.trim() && previews.length === 0 && !videoPreview) return;
+
+    try {
+      setIsPosting(true);
+
+      // Upload selected files first
+      let images: string[] = [];
+      let videoUrl: string | undefined;
+      if (files.length > 0) {
+        for (const f of files) {
+          const fd = new FormData();
+          fd.append('file', f);
+          const resUp = await fetch('/api/upload/cloudinary', { method: 'POST', body: fd });
+          if (resUp.ok) {
+            const dataUp = await resUp.json();
+            if (dataUp.resourceType === 'image') {
+              images.push(dataUp.url);
+            } else if (dataUp.resourceType === 'video') {
+              videoUrl = dataUp.url;
+            }
+          }
+        }
+      }
+
+      const res = await fetch('/api/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content: postContent,
+          postType: videoUrl ? 'video' : images.length > 0 ? 'image' : 'text',
+          images,
+          videoUrl,
+          tripId: tripId || undefined,
+          privacy: 'public'
+        })
+      });
+
+      if (res.ok) {
+        const newPost = await res.json();
+        setPosts((prev) => [newPost, ...prev]);
+        setPostContent('');
+        setFiles([]);
+        setPreviews([]);
+        setVideoPreview(null);
+        setTripId('');
+        toast.success('Post published');
+      }
+    } catch (error) {
+      console.error('Error posting:', error);
+      toast.error('Failed to publish post');
+    } finally {
+      setIsPosting(false);
+    }
+  };
+
+  const handleReaction = async (postId: string, reactionType: string) => {
+    try {
+      const res = await fetch(`/api/posts/${postId}/reactions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reactionType })
+      });
+
+      if (res.ok) {
+        const updatedPost = await res.json();
+        setPosts((prev) =>
+          prev.map((p) => (p._id === postId ? updatedPost : p))
+        );
+      }
+    } catch (error) {
+      console.error('Error reacting:', error);
+      toast.error('Failed to react');
+    }
+  };
+
+  const onPickFiles = (accept: string) => {
+    if (fileInputRef.current) {
+      fileInputRef.current.accept = accept;
+      fileInputRef.current.click();
+    }
+  };
+
+  const onFilesSelected: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+    const f = Array.from(e.target.files || []);
+    setFiles(f);
+    const imageUrls: string[] = [];
+    let videoUrlLocal: string | null = null;
+    f.forEach((file) => {
+      const url = URL.createObjectURL(file);
+      if (file.type.startsWith('image/')) imageUrls.push(url);
+      else if (file.type.startsWith('video/')) videoUrlLocal = url;
+    });
+    setPreviews(imageUrls);
+    setVideoPreview(videoUrlLocal);
+  };
+
+  const startEditPost = (post: Post) => {
+    setEditingPostId(post._id);
+    setEditContent(post.content);
+  };
+
+  const saveEditPost = async (postId: string) => {
+    try {
+      const res = await fetch(`/api/posts/${postId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: editContent })
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setPosts((prev) => prev.map((p) => (p._id === postId ? updated : p)));
+        setEditingPostId(null);
+        setEditContent('');
+        toast.success('Post updated');
+      }
+    } catch {
+      toast.error('Failed to update post');
+    }
+  };
+
+  const deletePost = async (postId: string) => {
+    if (!confirm('Delete this post?')) return;
+    try {
+      const res = await fetch(`/api/posts/${postId}`, { method: 'DELETE' });
+      if (res.ok) {
+        setPosts((prev) => prev.filter((p) => p._id !== postId));
+        toast.success('Post deleted');
+      }
+    } catch {
+      toast.error('Failed to delete post');
+    }
+  };
+
+  const reportPost = async (postId: string) => {
+    const reason = prompt('Reason for report (e.g., spam, harassment)');
+    if (!reason) return;
+    const details = prompt('Additional details (optional)') || '';
+    try {
+      const res = await fetch(`/api/posts/${postId}/report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason, details })
+      });
+      if (res.ok) toast.success('Report submitted');
+    } catch {
+      toast.error('Failed to submit report');
+    }
+  };
+
+  const toggleComments = (postId: string) => {
+    setOpenCommentsFor((prev) => ({ ...prev, [postId]: !prev[postId] }));
+  };
+
+  const submitComment = async (postId: string) => {
+    const content = newComment[postId]?.trim();
+    if (!content) return;
+    try {
+      const res = await fetch(`/api/posts/${postId}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content })
+      });
+      if (res.ok) {
+        const updatedPost = await res.json();
+        setPosts((prev) => prev.map((p) => (p._id === postId ? updatedPost : p)));
+        setNewComment((prev) => ({ ...prev, [postId]: '' }));
+      }
+    } catch {
+      toast.error('Failed to add comment');
+    }
+  };
+
+  const submitReply = async (postId: string, commentId: string) => {
+    const content = replyInputs[commentId]?.trim();
+    if (!content) return;
+    try {
+      const res = await fetch(`/api/posts/${postId}/comments/${commentId}/replies`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content })
+      });
+      if (res.ok) {
+        const updatedPost = await res.json();
+        setPosts((prev) => prev.map((p) => (p._id === postId ? updatedPost : p)));
+        setReplyInputs((prev) => ({ ...prev, [commentId]: '' }));
+      }
+    } catch {
+      toast.error('Failed to add reply');
+    }
+  };
+
+  // Helper to get reaction summary (top 3 reaction types with counts)
+  const getReactionSummary = (reactions: any[] = []) => {
+    const counts: Record<string, number> = {};
+    reactions.forEach((r: any) => {
+      counts[r.type] = (counts[r.type] || 0) + 1;
+    });
+    return Object.entries(counts)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 3)
+      .map(([type, count]) => ({ type, count }));
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)_320px] gap-6">
+          <div className="hidden lg:block">
+            <LeftSidebar />
+          </div>
+          <div className="space-y-6">
+          {/* Post Composer */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="card-surface p-4 md:p-6 space-y-4"
+          >
+            <div className="flex items-start gap-3 md:gap-4">
+              <Avatar className="h-10 w-10 md:h-12 md:w-12 flex-shrink-0">
+                <AvatarImage src={currentUser?.avatar || ''} alt={currentUser?.name || 'You'} />
+                <AvatarFallback>{currentUser?.name?.slice(0, 2)?.toUpperCase() || 'TB'}</AvatarFallback>
+              </Avatar>
+              <form onSubmit={handlePostSubmit} className="flex-1 space-y-3 w-full">
+                <Textarea
+                  placeholder="What's on your mind? Share a trip update..."
+                  value={postContent}
+                  onChange={(e) => setPostContent(e.target.value)}
+                  className="resize-none w-full text-sm md:text-base"
+                  rows={3}
+                />
+                {previews.length > 0 && (
+                  <div className="grid grid-cols-2 gap-2">
+                    {previews.map((src, idx) => (
+                      <div key={idx} className="relative h-32 rounded-lg overflow-hidden">
+                        <img src={src} className="w-full h-full object-cover" alt="preview" />
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {videoPreview && (
+                  <div className="relative rounded-lg overflow-hidden">
+                    <video src={videoPreview} controls className="w-full" />
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <label className="text-sm text-muted-foreground block">Tag trip:</label>
+                  <select
+                    value={tripId}
+                    onChange={(e) => setTripId(e.target.value)}
+                    className="w-full text-sm px-3 py-2 rounded-md border border-border bg-background"
+                  >
+                    <option value="">None</option>
+                    {myTrips.map((t) => (
+                      <option key={t._id} value={t._id}>{t.title} • {t.destination}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex flex-col md:flex-row items-center justify-between gap-3 pt-3 border-t border-border/60">
+                  <div className="flex gap-2 w-full md:w-auto">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-muted-foreground hover:text-secondary text-xs md:text-sm"
+                      onClick={() => onPickFiles('image/*')}
+                    >
+                      <ImageIcon className="h-4 w-4 mr-1 md:mr-2" />
+                      <span className="hidden sm:inline">Photo</span>
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-muted-foreground hover:text-secondary text-xs md:text-sm"
+                      onClick={() => onPickFiles('video/*')}
+                    >
+                      <Video className="h-4 w-4 mr-1 md:mr-2" />
+                      <span className="hidden sm:inline">Video</span>
+                    </Button>
+                  </div>
+                  <Button
+                    type="submit"
+                    className="gradient-sunset text-white w-full md:w-auto"
+                    disabled={( !postContent.trim() && previews.length === 0 && !videoPreview ) || isPosting}
+                    size="sm"
+                  >
+                    {isPosting ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4 mr-1 md:mr-2" />
+                        Post
+                      </>
+                    )}
+                  </Button>
+                </div>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  onChange={onFilesSelected}
+                  multiple
+                />
+              </form>
+            </div>
+          </motion.div>
+
+          {/* Feed */}
+          <div className="space-y-4">
+            {posts.length === 0 && !isLoading && (
+              <div className="card-surface p-12 text-center">
+                <Sparkles className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+                <p className="text-muted-foreground">Start following travelers to see their posts!</p>
+                <Button variant="outline" className="mt-4" asChild>
+                  <Link href="/explore">Explore Travelers</Link>
+                </Button>
+              </div>
+            )}
+
+            {posts.map((post, i) => (
+              <motion.div
+                key={post._id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                className="card-surface overflow-hidden"
+              >
+                {/* Post Header */}
+                <div className="p-4 md:p-6 border-b border-border/60">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-2 md:gap-3 flex-1 min-w-0">
+                      <Link href={`/profile/${post.userId._id}`}>
+                        <Avatar className="h-10 w-10 md:h-12 md:w-12 flex-shrink-0">
+                          <AvatarImage src={post.userId.avatar || ''} alt={post.userId.name} />
+                          <AvatarFallback>{post.userId.name?.slice(0,2)?.toUpperCase() || 'TB'}</AvatarFallback>
+                        </Avatar>
+                      </Link>
+                      <div className="flex-1 min-w-0">
+                        <Link href={`/profile/${post.userId._id}`}>
+                          <p className="font-semibold text-foreground hover:underline text-sm md:text-base truncate">
+                            {post.userId.name}
+                          </p>
+                        </Link>
+                        <p className="text-xs text-muted-foreground line-clamp-2">
+                          {new Date(post.createdAt).toLocaleDateString()}
+                          {post.location && ` • ${post.location}`}
+                          {post.tripId && ` • ${post.tripId.destination}`}
+                        </p>
+                      </div>
+                    </div>
+                    {/* Only show dropdown if user owns post or is admin */}
+                    {(currentUser?._id === post.userId._id || currentUser?.role === 'admin') && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {editingPostId === post._id ? (
+                            <DropdownMenuItem onClick={() => saveEditPost(post._id)}>
+                              <Pencil className="h-4 w-4 mr-2" /> Save
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem onClick={() => startEditPost(post)}>
+                              <Pencil className="h-4 w-4 mr-2" /> Edit
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem onClick={() => deletePost(post._id)}>
+                            <Trash2 className="h-4 w-4 mr-2" /> Delete
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => reportPost(post._id)}>
+                            <Flag className="h-4 w-4 mr-2" /> Report
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
+                    {/* Report option for non-owners */}
+                    {currentUser?._id !== post.userId._id && currentUser?.role !== 'admin' && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => reportPost(post._id)}>
+                            <Flag className="h-4 w-4 mr-2" /> Report
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
+                  </div>
+                </div>
+
+                {/* Post Content */}
+                <div className="p-4 md:p-6">
+                  {editingPostId === post._id ? (
+                    <div className="space-y-2">
+                      <Textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} rows={3} className="text-sm" />
+                      <div className="flex gap-2 flex-col-reverse sm:flex-row">
+                        <Button onClick={() => saveEditPost(post._id)} size="sm" className="gradient-sunset text-white w-full sm:w-auto">Save</Button>
+                        <Button onClick={() => { setEditingPostId(null); setEditContent(''); }} variant="outline" size="sm" className="w-full sm:w-auto">Cancel</Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-foreground whitespace-pre-wrap text-sm md:text-base">{post.content}</p>
+                  )}
+                  {post.images && post.images.length > 0 && (
+                    <div className="mt-4 -mx-6">
+                      <img
+                        src={post.images[0]}
+                        alt="Post image"
+                        className="w-full max-h-[70vh] object-cover"
+                      />
+                      {post.images.length > 1 && (
+                        <div className="grid grid-cols-2 gap-2 p-6">
+                          {post.images.slice(1).map((img, idx) => (
+                            <div key={idx} className="relative h-40 rounded-md overflow-hidden">
+                              <img src={img} alt={`Post image ${idx + 2}`} className="w-full h-full object-cover" />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {post.videoUrl && (
+                    <div className="mt-4 relative rounded-lg overflow-hidden">
+                      <video src={post.videoUrl} controls className="w-full" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Engagement Stats */}
+                <div className="px-4 md:px-6 py-2 border-y border-border/60 flex items-center justify-between text-xs md:text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    {post.reactions && post.reactions.length > 0 && (
+                      <>
+                        {/* Top 3 Reaction Icons */}
+                        <div className="flex -space-x-1">
+                          {getReactionSummary(post.reactions).map(({ type }) => {
+                            const reactionConfig = reactionTypes.find(rt => rt.type === type);
+                            if (!reactionConfig) return null;
+                            const Icon = reactionConfig.icon;
+                            return (
+                              <div
+                                key={type}
+                                className={`${reactionConfig.color} bg-card border border-border rounded-full p-1`}
+                                title={reactionConfig.label}
+                              >
+                                <Icon className="h-3 w-3" />
+                              </div>
+                            );
+                          })}
+                        </div>
+                        {/* Reaction Count - Clickable */}
+                        <button 
+                          onClick={() => setShowReactorsModal(post._id)}
+                          className="hover:underline hover:text-foreground"
+                        >
+                          {post.reactions.length}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                  {post.comments && post.comments.length > 0 && (
+                    <button 
+                      onClick={() => toggleComments(post._id)}
+                      className="hover:text-foreground hover:underline"
+                    >
+                      {post.comments.length} {post.comments.length === 1 ? 'comment' : 'comments'}
+                    </button>
+                  )}
+                </div>
+
+                {/* Reactors Modal */}
+                <AnimatePresence>
+                  {showReactorsModal === post._id && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+                      onClick={() => setShowReactorsModal(null)}
+                    >
+                      <motion.div
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.9, opacity: 0 }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="card-surface max-w-md w-full max-h-[80vh] overflow-hidden flex flex-col"
+                      >
+                        <div className="p-4 border-b border-border flex items-center justify-between">
+                          <h3 className="font-semibold text-lg">Reactions</h3>
+                          <button 
+                            onClick={() => setShowReactorsModal(null)}
+                            className="text-muted-foreground hover:text-foreground"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                        <div className="overflow-y-auto p-4 space-y-3">
+                          {post.reactions?.map((reaction: any, idx: number) => {
+                            const reactionConfig = reactionTypes.find(rt => rt.type === reaction.type);
+                            const Icon = reactionConfig?.icon || ThumbsUp;
+                            return (
+                              <div key={idx} className="flex items-center gap-3">
+                                <Link href={`/profile/${reaction.userId?._id || reaction.userId}`}>
+                                  <Avatar className="h-10 w-10">
+                                    <AvatarImage src={reaction.userId?.avatar} alt={reaction.userId?.name || 'User'} />
+                                    <AvatarFallback>{reaction.userId?.name?.slice(0,2)?.toUpperCase() || 'U'}</AvatarFallback>
+                                  </Avatar>
+                                </Link>
+                                <div className="flex-1">
+                                  <Link href={`/profile/${reaction.userId?._id || reaction.userId}`}>
+                                    <p className="font-medium hover:underline">
+                                      {reaction.userId?.name || 'Unknown User'}
+                                    </p>
+                                  </Link>
+                                </div>
+                                <div className={`${reactionConfig?.color || 'text-muted-foreground'}`}>
+                                  <Icon className="h-5 w-5" />
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </motion.div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Engagement Buttons */}
+                <div className="p-3 md:p-4 flex gap-1 md:gap-2">
+                  {/* Reaction Button with Picker */}
+                  <div 
+                    className="flex-1 relative"
+                    onMouseEnter={() => setShowReactionPicker(post._id)}
+                    onMouseLeave={() => setShowReactionPicker(null)}
+                  >
+                    {(() => {
+                      const userReaction = post.reactions?.find((r: any) => r.userId === currentUser?._id);
+                      const reactionConfig = userReaction 
+                        ? reactionTypes.find(rt => rt.type === userReaction.type)
+                        : null;
+                      const ReactionIcon = reactionConfig?.icon || ThumbsUp;
+                      
+                      return (
+                        <button
+                          onClick={() => handleReaction(post._id, 'like')}
+                          className={`w-full flex items-center justify-center gap-1 md:gap-2 hover:bg-secondary/10 rounded-lg py-2 transition text-xs md:text-sm ${
+                            userReaction ? reactionConfig?.color : 'text-muted-foreground hover:text-secondary'
+                          }`}
+                        >
+                          <ReactionIcon className="h-4 w-4" />
+                          <span className="hidden sm:inline">
+                            {reactionConfig?.label || 'Like'}
+                          </span>
+                        </button>
+                      );
+                    })()}
+                    
+                    {/* Reaction Picker */}
+                    <AnimatePresence>
+                      {showReactionPicker === post._id && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.9 }}
+                          transition={{ duration: 0.15 }}
+                          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-card border border-border rounded-full shadow-lg px-2 py-2 flex gap-1 z-50"
+                        >
+                          {reactionTypes.map((reaction) => {
+                            const Icon = reaction.icon;
+                            return (
+                              <button
+                                key={reaction.type}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleReaction(post._id, reaction.type);
+                                  setShowReactionPicker(null);
+                                }}
+                                className={`p-2 rounded-full hover:scale-125 transition-transform ${reaction.color} hover:bg-secondary/20`}
+                                title={reaction.label}
+                              >
+                                <Icon className="h-5 w-5" />
+                              </button>
+                            );
+                          })}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                  
+                  <button
+                    onClick={() => toggleComments(post._id)}
+                    className="flex-1 flex items-center justify-center gap-1 md:gap-2 text-muted-foreground hover:text-secondary hover:bg-secondary/10 rounded-lg py-2 transition text-xs md:text-sm"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    <span className="hidden sm:inline">Comment</span>
+                  </button>
+                  <button className="flex-1 flex items-center justify-center gap-1 md:gap-2 text-muted-foreground hover:text-secondary hover:bg-secondary/10 rounded-lg py-2 transition text-xs md:text-sm">
+                    <Share2 className="h-4 w-4" />
+                    <span className="hidden sm:inline">Share</span>
+                  </button>
+                </div>
+
+                {/* Comments & Replies */}
+                {openCommentsFor[post._id] && (
+                  <div className="px-4 md:px-6 pb-4 border-t border-border/60 space-y-3">
+                    <div className="flex gap-2 flex-col sm:flex-row">
+                      <Input
+                        value={newComment[post._id] || ''}
+                        onChange={(e) => setNewComment((prev) => ({ ...prev, [post._id]: e.target.value }))}
+                        placeholder="Write a comment..."
+                        className="text-sm"
+                      />
+                      <Button size="sm" onClick={() => submitComment(post._id)} className="w-full sm:w-auto">Comment</Button>
+                    </div>
+                    <div className="space-y-2">
+                      {(post.comments || []).map((comment: any) => (
+                        <div key={comment._id} className="text-sm">
+                          <p className="font-semibold text-foreground">{comment.userId?.name}</p>
+                          <p className="text-muted-foreground">{comment.content}</p>
+                          <div className="mt-2 flex gap-2">
+                            <Input
+                              value={replyInputs[comment._id] || ''}
+                              onChange={(e) => setReplyInputs((prev) => ({ ...prev, [comment._id]: e.target.value }))}
+                              placeholder="Reply..."
+                            />
+                            <Button size="sm" variant="outline" onClick={() => submitReply(post._id, comment._id)}>Reply</Button>
+                          </div>
+                          {comment.replies && comment.replies.length > 0 && (
+                            <div className="mt-2 pl-4 border-l border-border/60 space-y-1">
+                              {comment.replies.map((rep: any) => (
+                                <div key={rep._id}>
+                                  <p className="font-medium">{rep.userId?.name}</p>
+                                  <p className="text-muted-foreground">{rep.content}</p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            ))}
+
+            {isLoading && (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-secondary" />
+              </div>
+            )}
+
+            <div ref={observerTarget} className="h-4" />
+          </div>
+          </div>
+          <div className="hidden xl:block">
+            <RightSidebar />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

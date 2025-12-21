@@ -6,6 +6,7 @@ export interface IUser extends Document {
   name: string;
   role: 'user' | 'admin';
   avatar?: string;
+  coverPhoto?: string;
   bio?: string;
   interests?: string[];
   visitedCountries?: string[];
@@ -13,6 +14,8 @@ export interface IUser extends Document {
   isPremium: boolean;
   rating: number;
   reviewCount: number;
+  followers?: mongoose.Types.ObjectId[];
+  following?: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -24,6 +27,7 @@ const UserSchema = new Schema<IUser>(
     name: { type: String, required: true },
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
     avatar: { type: String },
+    coverPhoto: { type: String },
     bio: { type: String },
     interests: [String],
     visitedCountries: [String],
@@ -31,6 +35,8 @@ const UserSchema = new Schema<IUser>(
     isPremium: { type: Boolean, default: false },
     rating: { type: Number, default: 0 },
     reviewCount: { type: Number, default: 0 },
+    followers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+    following: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   },
   { timestamps: true }
 );

@@ -54,3 +54,22 @@ export async function clearSessionCookie() {
   const cookieStore = await cookies();
   cookieStore.delete('token');
 }
+
+// Extract token from NextRequest (Authorization header or cookies)
+export function getToken(request: any): string | null {
+  const authHeader = request.headers.get('authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    return authHeader.slice(7);
+  }
+  return request.cookies.get('token')?.value || null;
+}
+
+// Verify token (wraps verify with error handling)
+export async function verifyToken(token: string | null): Promise<JWTPayload | null> {
+  if (!token) return null;
+  try {
+    return await verify(token);
+  } catch (err) {
+    return null;
+  }
+}
