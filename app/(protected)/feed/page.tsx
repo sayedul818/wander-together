@@ -14,6 +14,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import PostDetailModal from '@/components/PostDetailModal';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -69,17 +70,21 @@ export default function FeedPage() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [showReactionPicker, setShowReactionPicker] = useState<string | null>(null);
   const [showReactorsModal, setShowReactorsModal] = useState<string | null>(null);
+  const [selectedPostModal, setSelectedPostModal] = useState<any>(null);
+  const [expandedPosts, setExpandedPosts] = useState<Record<string, boolean>>({});
   const observerTarget = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Reaction types with icons and colors
+
+  // Reaction types with emojis and colors
   const reactionTypes = [
-    { type: 'like', icon: ThumbsUp, label: 'Like', color: 'text-blue-500' },
-    { type: 'love', icon: Heart, label: 'Love', color: 'text-red-500' },
-    { type: 'wow', icon: PartyPopper, label: 'Wow', color: 'text-yellow-500' },
-    { type: 'adventure', icon: Plane, label: 'Adventure', color: 'text-green-500' },
-    { type: 'sad', icon: Frown, label: 'Sad', color: 'text-gray-500' },
-    { type: 'angry', icon: Angry, label: 'Angry', color: 'text-orange-500' },
+    { type: 'like', label: 'Like', emoji: '👍', color: 'text-blue-500' },
+    { type: 'love', label: 'Love', emoji: '❤️', color: 'text-red-500' },
+    { type: 'care', label: 'Care', emoji: '🥰', color: 'text-amber-500' },
+    { type: 'haha', label: 'Haha', emoji: '😂', color: 'text-yellow-500' },
+    { type: 'wow', label: 'Wow', emoji: '😮', color: 'text-yellow-500' },
+    { type: 'sad', label: 'Sad', emoji: '😢', color: 'text-blue-400' },
+    { type: 'angry', label: 'Angry', emoji: '😡', color: 'text-orange-600' },
   ];
 
   const fetchPosts = useCallback(async (pageNum: number) => {
@@ -333,8 +338,13 @@ export default function FeedPage() {
         const updatedPost = await res.json();
         setPosts((prev) => prev.map((p) => (p._id === postId ? updatedPost : p)));
         setNewComment((prev) => ({ ...prev, [postId]: '' }));
+        toast.success('Comment added');
+      } else {
+        const error = await res.json();
+        toast.error(error.error || 'Failed to add comment');
       }
-    } catch {
+    } catch (error) {
+      console.error('Error adding comment:', error);
       toast.error('Failed to add comment');
     }
   };
@@ -352,8 +362,13 @@ export default function FeedPage() {
         const updatedPost = await res.json();
         setPosts((prev) => prev.map((p) => (p._id === postId ? updatedPost : p)));
         setReplyInputs((prev) => ({ ...prev, [commentId]: '' }));
+        toast.success('Reply added');
+      } else {
+        const error = await res.json();
+        toast.error(error.error || 'Failed to add reply');
       }
-    } catch {
+    } catch (error) {
+      console.error('Error adding reply:', error);
       toast.error('Failed to add reply');
     }
   };
@@ -368,6 +383,20 @@ export default function FeedPage() {
       .sort(([, a], [, b]) => b - a)
       .slice(0, 3)
       .map(([type, count]) => ({ type, count }));
+  };
+
+  // Helper to truncate text if more than 20 words
+  const getTruncatedText = (text: string, postId: string) => {
+    const words = text.split(' ');
+    if (words.length <= 20) return text;
+    
+    if (expandedPosts[postId]) return text;
+    
+    return words.slice(0, 20).join(' ') + '...';
+  };
+
+  const togglePostExpansion = (postId: string) => {
+    setExpandedPosts((prev) => ({ ...prev, [postId]: !prev[postId] }));
   };
 
   return (
@@ -574,7 +603,19 @@ export default function FeedPage() {
                       </div>
                     </div>
                   ) : (
-                    <p className="text-foreground whitespace-pre-wrap text-sm md:text-base">{post.content}</p>
+                    <div>
+                      <p className="text-foreground whitespace-pre-wrap text-sm md:text-base">
+                        {getTruncatedText(post.content, post._id)}
+                      </p>
+                      {post.content && post.content.split(' ').length > 20 && (
+                        <button
+                          onClick={() => togglePostExpansion(post._id)}
+                          className="text-secondary hover:underline text-sm font-medium mt-1"
+                        >
+                          {expandedPosts[post._id] ? 'See less' : 'See more'}
+                        </button>
+                      )}
+                    </div>
                   )}
                   {post.images && post.images.length > 0 && (
                     <div className="mt-4 -mx-6">
@@ -606,19 +647,18 @@ export default function FeedPage() {
                   <div className="flex items-center gap-2">
                     {post.reactions && post.reactions.length > 0 && (
                       <>
-                        {/* Top 3 Reaction Icons */}
+                        {/* Top 3 Reactions (emoji) */}
                         <div className="flex -space-x-1">
                           {getReactionSummary(post.reactions).map(({ type }) => {
                             const reactionConfig = reactionTypes.find(rt => rt.type === type);
                             if (!reactionConfig) return null;
-                            const Icon = reactionConfig.icon;
                             return (
                               <div
                                 key={type}
-                                className={`${reactionConfig.color} bg-card border border-border rounded-full p-1`}
+                                className={`${reactionConfig.color} bg-card border border-border rounded-full px-2 py-1 text-[11px] leading-none`}
                                 title={reactionConfig.label}
                               >
-                                <Icon className="h-3 w-3" />
+                                {reactionConfig.emoji}
                               </div>
                             );
                           })}
@@ -635,7 +675,7 @@ export default function FeedPage() {
                   </div>
                   {post.comments && post.comments.length > 0 && (
                     <button 
-                      onClick={() => toggleComments(post._id)}
+                      onClick={() => setSelectedPostModal(post)}
                       className="hover:text-foreground hover:underline"
                     >
                       {post.comments.length} {post.comments.length === 1 ? 'comment' : 'comments'}
@@ -672,7 +712,6 @@ export default function FeedPage() {
                         <div className="overflow-y-auto p-4 space-y-3">
                           {post.reactions?.map((reaction: any, idx: number) => {
                             const reactionConfig = reactionTypes.find(rt => rt.type === reaction.type);
-                            const Icon = reactionConfig?.icon || ThumbsUp;
                             return (
                               <div key={idx} className="flex items-center gap-3">
                                 <Link href={`/profile/${reaction.userId?._id || reaction.userId}`}>
@@ -688,8 +727,8 @@ export default function FeedPage() {
                                     </p>
                                   </Link>
                                 </div>
-                                <div className={`${reactionConfig?.color || 'text-muted-foreground'}`}>
-                                  <Icon className="h-5 w-5" />
+                                <div className={`${reactionConfig?.color || 'text-muted-foreground'} text-lg`}>
+                                  {reactionConfig?.emoji || '👍'}
                                 </div>
                               </div>
                             );
@@ -709,11 +748,11 @@ export default function FeedPage() {
                     onMouseLeave={() => setShowReactionPicker(null)}
                   >
                     {(() => {
-                      const userReaction = post.reactions?.find((r: any) => r.userId === currentUser?._id);
+                      const currentUserId = currentUser?._id?.toString?.() || currentUser?.id || currentUser?._id;
+                      const userReaction = post.reactions?.find((r: any) => (r.userId?._id || r.userId)?.toString() === (currentUserId as string));
                       const reactionConfig = userReaction 
                         ? reactionTypes.find(rt => rt.type === userReaction.type)
                         : null;
-                      const ReactionIcon = reactionConfig?.icon || ThumbsUp;
                       
                       return (
                         <button
@@ -722,7 +761,9 @@ export default function FeedPage() {
                             userReaction ? reactionConfig?.color : 'text-muted-foreground hover:text-secondary'
                           }`}
                         >
-                          <ReactionIcon className="h-4 w-4" />
+                          <span className="text-base">
+                            {reactionConfig?.emoji || '👍'}
+                          </span>
                           <span className="hidden sm:inline">
                             {reactionConfig?.label || 'Like'}
                           </span>
@@ -740,30 +781,27 @@ export default function FeedPage() {
                           transition={{ duration: 0.15 }}
                           className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-card border border-border rounded-full shadow-lg px-2 py-2 flex gap-1 z-50"
                         >
-                          {reactionTypes.map((reaction) => {
-                            const Icon = reaction.icon;
-                            return (
-                              <button
-                                key={reaction.type}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleReaction(post._id, reaction.type);
-                                  setShowReactionPicker(null);
-                                }}
-                                className={`p-2 rounded-full hover:scale-125 transition-transform ${reaction.color} hover:bg-secondary/20`}
-                                title={reaction.label}
-                              >
-                                <Icon className="h-5 w-5" />
-                              </button>
-                            );
-                          })}
+                          {reactionTypes.map((reaction) => (
+                            <button
+                              key={reaction.type}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleReaction(post._id, reaction.type);
+                                setShowReactionPicker(null);
+                              }}
+                              className={`p-2 rounded-full hover:scale-125 transition-transform ${reaction.color} hover:bg-secondary/20 text-lg`}
+                              title={reaction.label}
+                            >
+                              {reaction.emoji}
+                            </button>
+                          ))}
                         </motion.div>
                       )}
                     </AnimatePresence>
                   </div>
                   
                   <button
-                    onClick={() => toggleComments(post._id)}
+                    onClick={() => setSelectedPostModal(post)}
                     className="flex-1 flex items-center justify-center gap-1 md:gap-2 text-muted-foreground hover:text-secondary hover:bg-secondary/10 rounded-lg py-2 transition text-xs md:text-sm"
                   >
                     <MessageCircle className="h-4 w-4" />
@@ -774,47 +812,6 @@ export default function FeedPage() {
                     <span className="hidden sm:inline">Share</span>
                   </button>
                 </div>
-
-                {/* Comments & Replies */}
-                {openCommentsFor[post._id] && (
-                  <div className="px-4 md:px-6 pb-4 border-t border-border/60 space-y-3">
-                    <div className="flex gap-2 flex-col sm:flex-row">
-                      <Input
-                        value={newComment[post._id] || ''}
-                        onChange={(e) => setNewComment((prev) => ({ ...prev, [post._id]: e.target.value }))}
-                        placeholder="Write a comment..."
-                        className="text-sm"
-                      />
-                      <Button size="sm" onClick={() => submitComment(post._id)} className="w-full sm:w-auto">Comment</Button>
-                    </div>
-                    <div className="space-y-2">
-                      {(post.comments || []).map((comment: any) => (
-                        <div key={comment._id} className="text-sm">
-                          <p className="font-semibold text-foreground">{comment.userId?.name}</p>
-                          <p className="text-muted-foreground">{comment.content}</p>
-                          <div className="mt-2 flex gap-2">
-                            <Input
-                              value={replyInputs[comment._id] || ''}
-                              onChange={(e) => setReplyInputs((prev) => ({ ...prev, [comment._id]: e.target.value }))}
-                              placeholder="Reply..."
-                            />
-                            <Button size="sm" variant="outline" onClick={() => submitReply(post._id, comment._id)}>Reply</Button>
-                          </div>
-                          {comment.replies && comment.replies.length > 0 && (
-                            <div className="mt-2 pl-4 border-l border-border/60 space-y-1">
-                              {comment.replies.map((rep: any) => (
-                                <div key={rep._id}>
-                                  <p className="font-medium">{rep.userId?.name}</p>
-                                  <p className="text-muted-foreground">{rep.content}</p>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </motion.div>
             ))}
 
@@ -832,6 +829,18 @@ export default function FeedPage() {
           </div>
         </div>
       </div>
+
+      {/* Post Detail Modal */}
+      <PostDetailModal
+        post={selectedPostModal}
+        isOpen={!!selectedPostModal}
+        onClose={() => setSelectedPostModal(null)}
+        currentUser={currentUser}
+        onCommentAdded={(updatedPost) => {
+          setPosts((prev) => prev.map((p) => (p._id === updatedPost._id ? updatedPost : p)));
+          setSelectedPostModal(updatedPost);
+        }}
+      />
     </div>
   );
 }

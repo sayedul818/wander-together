@@ -223,9 +223,9 @@ function MessagesContent() {
     return (
       <div className="h-[calc(100vh-4rem)] flex flex-col overflow-hidden">
         <div className="flex-1 flex overflow-hidden">
-          <div className="page-shell flex-1 flex pt-6 pb-6">
+        <div className="flex-1 flex pt-0 lg:pt-6 lg:pb-6 lg:px-6">
           {/* Sidebar */}
-          <div className="w-full lg:w-80 xl:w-96 border-r border-border bg-card flex-shrink-0 rounded-l-xl overflow-hidden flex flex-col">
+          <div className="w-full lg:w-80 xl:w-96 border-r border-border bg-card flex-shrink-0 rounded-none lg:rounded-l-xl overflow-hidden flex flex-col">
             <div className="flex flex-col h-full">
               {/* Sidebar Header */}
               <div className="p-4 border-b border-border flex-shrink-0">
@@ -344,7 +344,7 @@ function MessagesContent() {
           </div>
 
           {/* Empty State */}
-          <div className="flex-1 hidden lg:flex items-center justify-center text-center p-8 bg-muted/20 rounded-r-xl">
+          <div className="flex-1 hidden lg:flex items-center justify-center text-center p-8 bg-muted/20 rounded-none lg:rounded-r-xl">
             <div>
               <MessageCircle className="h-20 w-20 mx-auto mb-4 text-muted-foreground opacity-50" />
               <h3 className="text-xl font-semibold text-foreground mb-2">Select a conversation</h3>
@@ -360,9 +360,9 @@ function MessagesContent() {
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col overflow-hidden">
       <div className="flex-1 flex overflow-hidden">
-        <div className="page-shell flex-1 flex pt-6 pb-6">
+        <div className="flex-1 flex pt-0 lg:pt-6 lg:pb-6 lg:px-6">
         {/* Sidebar - Hidden on mobile when chat is open */}
-        <div className={`${userId ? 'hidden' : 'flex'} lg:flex w-full lg:w-80 xl:w-96 border-r border-border bg-card flex-shrink-0 rounded-l-xl overflow-hidden flex-col`}>
+        <div className={`${userId ? 'hidden' : 'flex'} lg:flex w-full lg:w-80 xl:w-96 border-r border-border bg-card flex-shrink-0 rounded-none lg:rounded-l-xl overflow-hidden flex-col`}>
           <div className="flex flex-col h-full">
             {/* Sidebar Header */}
             <div className="p-4 border-b border-border">
@@ -456,7 +456,7 @@ function MessagesContent() {
 
         {/* Chat Area - Shows when user is selected */}
         {userId && selectedUser && (
-          <div className="flex-1 flex flex-col bg-background rounded-r-xl overflow-hidden min-h-0">
+          <div className="flex-1 flex flex-col bg-background rounded-none lg:rounded-r-xl overflow-hidden min-h-0">
             {/* Chat Header */}
             <div className="flex items-center gap-3 p-4 border-b border-border bg-card flex-shrink-0">
               {/* Back button for mobile */}

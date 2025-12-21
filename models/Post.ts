@@ -2,7 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IReaction {
   userId: mongoose.Types.ObjectId;
-  type: 'like' | 'love' | 'wow' | 'adventure';
+  type: 'like' | 'love' | 'care' | 'haha' | 'wow' | 'sad' | 'angry';
   createdAt: Date;
 }
 
@@ -14,6 +14,7 @@ export interface IComment {
   updatedAt: Date;
   replies?: IComment[];
   likes?: mongoose.Types.ObjectId[];
+  reactions?: IReaction[];
 }
 
 export interface IPost extends Document {
@@ -38,10 +39,10 @@ export interface IPost extends Document {
 const ReactionSchema = new Schema<IReaction>(
   {
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    type: { 
-      type: String, 
-      enum: ['like', 'love', 'wow', 'adventure'], 
-      required: true 
+    type: {
+      type: String,
+      enum: ['like', 'love', 'care', 'haha', 'wow', 'sad', 'angry'],
+      required: true
     },
   },
   { timestamps: true }
@@ -53,6 +54,7 @@ const CommentSchema = new Schema<IComment>(
     content: { type: String, required: true },
     replies: [],
     likes: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+    reactions: [ReactionSchema],
   },
   { timestamps: true }
 );
@@ -84,6 +86,10 @@ const PostSchema = new Schema<IPost>(
   },
   { timestamps: true }
 );
+// Ensure schema updates apply during dev hot-reload
+if (mongoose.models.Post) {
+  delete mongoose.models.Post;
+}
 
-const Post = (mongoose.models.Post as mongoose.Model<IPost>) || mongoose.model<IPost>('Post', PostSchema);
+const Post = mongoose.model<IPost>('Post', PostSchema);
 export default Post;

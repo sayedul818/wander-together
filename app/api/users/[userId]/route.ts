@@ -17,7 +17,7 @@ export async function GET(
       );
     }
 
-    const user = await User.findById(userId).select('_id name email avatar');
+    const user = await User.findById(userId).select('_id name email avatar coverPhoto bio location interests');
     
     if (!user) {
       return Response.json(
@@ -32,6 +32,10 @@ export async function GET(
         name: user.name,
         email: user.email,
         avatar: user.avatar,
+        coverPhoto: user.coverPhoto,
+        bio: user.bio,
+        location: user.location,
+        interests: user.interests,
       },
     });
   } catch (error) {
