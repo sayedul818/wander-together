@@ -509,7 +509,7 @@ function MessagesContent() {
         {/* Chat Area - Shows when user is selected */}
         {userId && selectedUser && (
           <div 
-            className="flex-1 flex flex-col bg-background rounded-none lg:rounded-r-xl overflow-hidden min-h-0 fixed lg:static inset-0 top-0 bottom-0 left-0 right-0 lg:inset-auto z-40"
+            className="flex-1 flex flex-col bg-background rounded-none lg:rounded-r-xl overflow-hidden min-h-0 fixed lg:static top-16 lg:top-auto bottom-0 left-0 right-0 lg:inset-auto z-40"
           >
             {/* Chat Header */}
             <div className="flex items-center gap-3 p-4 border-b border-border bg-card flex-shrink-0">
