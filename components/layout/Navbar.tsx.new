@@ -131,27 +131,6 @@ export function Navbar() {
         { href: '/explore', label: 'Explore', icon: MapPin },
       ];
 
-    // Desktop links (without Suggestions)
-    const desktopLeftLinks = user
-      ? [
-          { href: '/feed', label: 'Feed', icon: Heart },
-          { href: '/explore', label: 'Explore', icon: MapPin },
-        ]
-      : [
-          { href: '/explore', label: 'Explore', icon: MapPin },
-        ];
-
-    // Mobile links (with Suggestions)
-    const mobileLeftLinks = user
-      ? [
-          { href: '/feed', label: 'Feed', icon: Heart },
-          { href: '/explore', label: 'Explore', icon: MapPin },
-          { href: '/suggestions', label: 'Suggestions', icon: Users },
-        ]
-      : [
-          { href: '/explore', label: 'Explore', icon: MapPin },
-        ];
-
   const afterDiscoverLinks = user
     ? [
         { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
@@ -178,7 +157,7 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-2">
             <NavigationMenu.Root className="relative">
               <NavigationMenu.List className="flex items-center gap-1">
-                  {desktopLeftLinks.map((link) => (
+                {leftLinks.map((link) => (
                   <NavigationMenu.Item key={link.href}>
                     <NavigationMenu.Link asChild>
                       <Link
@@ -320,121 +299,4 @@ export function Navbar() {
           </div>
         </div>
 
-        {/* Mobile Navigation */}
-        {isOpen && (
-          <div className="md:hidden border-t border-border py-4 space-y-4 bg-background">
-            <div className="space-y-1">
-              <button
-                onClick={() => setIsDiscoverOpen(!isDiscoverOpen)}
-                className="w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-foreground hover:bg-muted transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <Compass className="h-5 w-5" />
-                  <span className="font-medium">Discover</span>
-                </div>
-                <ChevronDown
-                  className={cn(
-                    'h-4 w-4 transition-transform',
-                    isDiscoverOpen && 'rotate-180'
-                  )}
-                />
-              </button>
-              {isDiscoverOpen && (
-                <div className="space-y-1 pl-2">
-                  {megaMenuSections.map((section) => (
-                    <div key={section.title} className="space-y-1">
-                      <div className="px-4 pt-2 pb-1 text-xs font-medium text-muted-foreground/70">{section.title}</div>
-                      {section.items.map((item) => (
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          className="flex items-center gap-3 px-4 py-2 rounded-lg text-foreground hover:bg-muted transition-colors"
-                          onClick={() => setIsOpen(false)}
-                        >
-                          <item.icon className="h-4 w-4 text-primary" />
-                          <span className="text-sm">{item.label}</span>
-                        </Link>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Mobile navigation links before Discover */}
-            <div className="space-y-1">
-              <div className="px-4 text-xs uppercase tracking-wide text-muted-foreground font-semibold">Navigation</div>
-              {(user ? [
-                { href: '/feed', label: 'Feed', icon: Heart },
-                { href: '/explore', label: 'Explore', icon: MapPin },
-                { href: '/suggestions', label: 'Suggestions', icon: Users },
-              ] : [
-                { href: '/explore', label: 'Explore', icon: MapPin },
-              ]).map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={cn(
-                    'flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors',
-                    isActive(link.href)
-                      ? 'bg-orange-100 text-orange-600 dark:bg-orange-500/20 dark:text-orange-200'
-                      : 'text-foreground hover:bg-muted'
-                  )}
-                  onClick={() => setIsOpen(false)}
-                >
-                  <link.icon className="h-5 w-5" />
-                  <span className="font-medium">{link.label}</span>
-                </Link>
-              ))}
-            </div>
-
-            {/* Mobile Dashboard link after Discover */}
-            {user && (
-              <Link
-                href="/dashboard"
-                className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-foreground hover:bg-muted transition-colors"
-                onClick={() => setIsOpen(false)}
-              >
-                <BarChart3 className="h-5 w-5" />
-                <span className="font-medium">Dashboard</span>
-              </Link>
-            )}
-
-            {user?.role === 'admin' && (
-              <Link
-                href="/admin"
-                className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-foreground hover:bg-muted transition-colors"
-                onClick={() => setIsOpen(false)}
-              >
-                <BarChart3 className="h-5 w-5" />
-                <span className="font-medium">Admin</span>
-              </Link>
-            )}
-
-            {!user && (
-              <div className="space-y-2 px-4 pt-2">
-                <Link href="/login" onClick={() => setIsOpen(false)}>
-                  <Button variant="outline" className="w-full">
-                    Sign In
-                  </Button>
-                </Link>
-                <Link href="/register" onClick={() => setIsOpen(false)}>
-                  <Button className="w-full gradient-sunset text-white">
-                    Sign Up
-                  </Button>
-                </Link>
-              </div>
-            )}
-
-            <div className="px-4 pt-2 border-t border-border">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Theme</span>
-                <ThemeToggle />
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </nav>
-  );
-}
+        {/* Mobile Navigation - Continue from existing file */}

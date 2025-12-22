@@ -41,6 +41,39 @@ export async function POST(req: NextRequest) {
       reviewCount: 0,
     });
 
+    // Auto-follow default users
+    const defaultUserNames = [
+      'osman hadi',
+      'SAYED',
+      'borhan uddin',
+      'Abdul_majed_asaad_',
+      'tamila shikdar'
+    ];
+
+    try {
+      // Find default users by name (case-insensitive)
+      const defaultUsers = await User.find({
+        name: { $in: defaultUserNames.map(n => new RegExp(`^${n}$`, 'i')) }
+      }).select('_id followers');
+
+      if (defaultUsers.length > 0) {
+        const defaultUserIds = defaultUsers.map(u => u._id);
+
+        // Add default users to new user's following list
+        user.following = defaultUserIds;
+        await user.save();
+
+        // Add new user to each default user's followers list
+        await User.updateMany(
+          { _id: { $in: defaultUserIds } },
+          { $addToSet: { followers: user._id } }
+        );
+      }
+    } catch (autoFollowError) {
+      // Log error but don't fail registration
+      console.error('Auto-follow error:', autoFollowError);
+    }
+
     // Create JWT token
     const token = await sign({
       userId: user._id.toString(),

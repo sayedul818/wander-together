@@ -1,5 +1,6 @@
 import connectToDatabase from '@/lib/db';
 import User from '@/models/User';
+import { getSession } from '@/lib/auth';
 
 export async function GET(
   request: Request,
@@ -17,7 +18,8 @@ export async function GET(
       );
     }
 
-    const user = await User.findById(userId).select('_id name email avatar coverPhoto bio location interests');
+    // Include followers/following for counts and isFollowing computation
+    const user = await User.findById(userId).select('_id name email avatar coverPhoto bio location interests followers following');
     
     if (!user) {
       return Response.json(
@@ -25,6 +27,13 @@ export async function GET(
         { status: 404 }
       );
     }
+
+    // Determine if current viewer follows this user
+    const session = await getSession();
+    const viewerId = session?.userId?.toString();
+    const isFollowing = !!(
+      viewerId && Array.isArray(user.followers) && user.followers.some((id: any) => id?.toString() === viewerId)
+    );
 
     return Response.json({
       user: {
@@ -36,7 +45,10 @@ export async function GET(
         bio: user.bio,
         location: user.location,
         interests: user.interests,
+        followers: user.followers || [],
+        following: user.following || [],
       },
+      isFollowing,
     });
   } catch (error) {
     console.error('Error fetching user:', error);

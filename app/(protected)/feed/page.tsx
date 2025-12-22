@@ -101,7 +101,8 @@ export default function FeedPage() {
   const fetchPosts = useCallback(async (pageNum: number) => {
     try {
       setIsLoading(true);
-      const res = await fetch(`/api/posts?page=${pageNum}&limit=10`);
+      // Default to Following feed for logged-in users
+      const res = await fetch(`/api/posts?scope=following&page=${pageNum}&limit=10`);
       if (res.ok) {
         const data = await res.json();
         if (pageNum === 1) {

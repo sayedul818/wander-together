@@ -409,24 +409,44 @@ export default function MyProfilePage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="card-surface p-4 text-center"
+            className="card-surface p-4 text-center cursor-pointer hover:bg-muted/50 transition-colors"
           >
-            <p className="text-2xl font-bold text-gradient-sunset">
-              {user.followers?.length || 0}
-            </p>
-            <p className="text-sm text-muted-foreground">Followers</p>
+            <Link href="/followers" className="block">
+              <p className="text-2xl font-bold text-gradient-sunset">
+                {user.followers?.length || 0}
+              </p>
+              <p className="text-sm text-muted-foreground">Followers</p>
+            </Link>
           </motion.div>
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="card-surface p-4 text-center"
+            className="card-surface p-4 text-center cursor-pointer hover:bg-muted/50 transition-colors"
           >
-            <p className="text-2xl font-bold text-gradient-sunset">
-              {user.following?.length || 0}
-            </p>
-            <p className="text-sm text-muted-foreground">Following</p>
+            <Link href="/following" className="block">
+              <p className="text-2xl font-bold text-gradient-sunset">
+                {user.following?.length || 0}
+              </p>
+              <p className="text-sm text-muted-foreground">Following</p>
+            </Link>
           </motion.div>
+        </div>
+      </div>
+
+      {/* Followers/Following Buttons */}
+      <div className="page-shell mb-8">
+        <div className="flex flex-wrap gap-2 sm:gap-3">
+          <Link href="/followers" className="flex-1 min-w-[120px]">
+            <Button variant="outline" className="w-full">
+              View Followers
+            </Button>
+          </Link>
+          <Link href="/following" className="flex-1 min-w-[120px]">
+            <Button variant="outline" className="w-full">
+              View Following
+            </Button>
+          </Link>
         </div>
       </div>
 
