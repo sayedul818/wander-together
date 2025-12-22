@@ -78,6 +78,13 @@ export default function FeedPage() {
   const observerTarget = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showPostModal, setShowPostModal] = useState(false);
+  
+  // Pull to refresh states
+  const [isPullRefreshing, setIsPullRefreshing] = useState(false);
+  const [pullDistance, setPullDistance] = useState(0);
+  const [startY, setStartY] = useState(0);
+  const pullThreshold = 80;
+  const maxPullDistance = 120;
 
 
   // Reaction types with emojis and colors
@@ -111,6 +118,49 @@ export default function FeedPage() {
       setIsLoading(false);
     }
   }, []);
+
+  // Pull to refresh handler
+  const handleRefresh = useCallback(async () => {
+    try {
+      setIsPullRefreshing(true);
+      await fetchPosts(1);
+      setPage(1);
+      toast.success('Feed refreshed!');
+    } catch (error) {
+      console.error('Error refreshing:', error);
+    } finally {
+      setIsPullRefreshing(false);
+      setPullDistance(0);
+    }
+  }, [fetchPosts]);
+
+  // Touch event handlers for pull to refresh
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (window.scrollY === 0) {
+      setStartY(e.touches[0].clientY);
+    }
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (startY === 0 || isPullRefreshing) return;
+    
+    const currentY = e.touches[0].clientY;
+    const distance = currentY - startY;
+    
+    if (distance > 0 && window.scrollY === 0) {
+      e.preventDefault();
+      setPullDistance(Math.min(distance, maxPullDistance));
+    }
+  }, [startY, isPullRefreshing, maxPullDistance]);
+
+  const handleTouchEnd = useCallback(() => {
+    if (pullDistance >= pullThreshold && !isPullRefreshing) {
+      handleRefresh();
+    } else {
+      setPullDistance(0);
+    }
+    setStartY(0);
+  }, [pullDistance, pullThreshold, isPullRefreshing, handleRefresh]);
 
   useEffect(() => {
     fetchPosts(1);
@@ -455,7 +505,38 @@ export default function FeedPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div 
+      className="min-h-screen bg-background"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Pull to Refresh Indicator */}
+      <motion.div
+        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center pointer-events-none"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ 
+          opacity: pullDistance > 0 ? 1 : 0, 
+          y: pullDistance > 0 ? Math.min(pullDistance - 20, 60) : -20 
+        }}
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+      >
+        <div className="bg-card border border-border shadow-lg rounded-full p-3 mt-4">
+          <motion.div
+            animate={{ rotate: isPullRefreshing ? 360 : pullDistance * 4 }}
+            transition={{ 
+              duration: isPullRefreshing ? 1 : 0,
+              repeat: isPullRefreshing ? Infinity : 0,
+              ease: 'linear'
+            }}
+          >
+            <Loader2 
+              className={`h-5 w-5 ${pullDistance >= pullThreshold ? 'text-primary' : 'text-muted-foreground'}`}
+            />
+          </motion.div>
+        </div>
+      </motion.div>
+
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)_320px] gap-6">
           <div className="hidden lg:block">
