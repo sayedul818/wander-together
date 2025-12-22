@@ -54,7 +54,7 @@ export default function LoginPage() {
         if (sessionRes.ok) {
           toast.success('Welcome back! You have successfully logged in.');
           // Force a page reload to ensure Navbar gets updated user state
-          window.location.href = '/dashboard';
+          window.location.href = '/feed';
         } else {
           toast.error('Session could not be established. Please try again.');
         }

@@ -6,7 +6,7 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // Protected routes that require authentication
-  const protectedRoutes = ['/dashboard', '/profile', '/travel-plans', '/explore', '/messages'];
+  const protectedRoutes = ['/dashboard', '/profile', '/travel-plans', '/explore', '/messages', '/feed'];
   const adminRoutes = ['/admin'];
 
   // Check if the route is protected
@@ -21,12 +21,12 @@ export async function middleware(request: NextRequest) {
   } else {
     // Check for admin routes
     if (isAdminRoute && session.role !== 'admin') {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
+      return NextResponse.redirect(new URL('/feed', request.url));
     }
 
-    // Redirect to dashboard if trying to access login/register
-    if (pathname === '/login' || pathname === '/register') {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
+    // Redirect to feed if trying to access login/register or root
+    if (pathname === '/login' || pathname === '/register' || pathname === '/') {
+      return NextResponse.redirect(new URL('/feed', request.url));
     }
   }
 
