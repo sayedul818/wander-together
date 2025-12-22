@@ -109,6 +109,17 @@ export default function StoryViewerModal({ open, stories, startIndex, onClose, o
 				updated[index] = { ...story, reactions: data.reactions } as StoryItem;
 				return updated;
 			});
+			// Show feedback toast
+			const reactionEmojis: Record<string, string> = {
+				like: '👍',
+				love: '❤️',
+				care: '🥰',
+				haha: '😂',
+				wow: '😮',
+				sad: '😢',
+				angry: '😡'
+			};
+			toast.success(`Reacted ${reactionEmojis[type] || type} to story`);
 		} catch {}
 	};
 
@@ -132,6 +143,7 @@ export default function StoryViewerModal({ open, stories, startIndex, onClose, o
 				return updated;
 			});
 			setReply('');
+			toast.success('Reply sent! It will appear in their messages.');
 		} catch {
 			toast.error('Could not send reply');
 		} finally {
@@ -217,23 +229,40 @@ export default function StoryViewerModal({ open, stories, startIndex, onClose, o
 							<div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center justify-between gap-3 rounded-2xl bg-black/30 p-3 sm:p-4 backdrop-blur dark:bg-white/10">
 								<div className="flex items-center gap-2 flex-wrap">
 									{['like', 'love', 'wow'].map((type) => (
-										<button
+										<motion.button
 											key={type}
 											onClick={() => handleReact(type)}
-											className={`flex items-center gap-1.5 rounded-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm transition ${
-												currentReaction === type ? 'bg-white text-slate-900' : 'bg-white/10 text-white'
+											whileHover={{ scale: 1.1 }}
+											whileTap={{ scale: 0.9 }}
+											animate={currentReaction === type ? { 
+												scale: [1, 1.2, 1],
+												transition: { duration: 0.3 }
+											} : {}}
+											className={`flex items-center gap-1.5 rounded-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm transition-all duration-200 ${
+												currentReaction === type 
+													? 'bg-white text-slate-900 shadow-lg shadow-white/25' 
+													: 'bg-white/10 text-white hover:bg-white/20'
 											}`}
 										>
-											{type === 'like' && <Heart className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
-											{type === 'love' && <Flame className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
-											{type === 'wow' && <MessageCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 rotate-180" />}
+											<motion.span
+												animate={currentReaction === type ? {
+													rotate: [0, -10, 10, -10, 0],
+													transition: { duration: 0.4 }
+												} : {}}
+											>
+												{type === 'like' && <Heart className={`h-3.5 w-3.5 sm:h-4 sm:w-4 transition-all ${currentReaction === type ? 'fill-red-500 text-red-500' : ''}`} />}
+												{type === 'love' && <Flame className={`h-3.5 w-3.5 sm:h-4 sm:w-4 transition-all ${currentReaction === type ? 'fill-orange-500 text-orange-500' : ''}`} />}
+												{type === 'wow' && <MessageCircle className={`h-3.5 w-3.5 sm:h-4 sm:w-4 rotate-180 transition-all ${currentReaction === type ? 'fill-yellow-500 text-yellow-500' : ''}`} />}
+											</motion.span>
 											<span className="capitalize">{type}</span>
-										</button>
+										</motion.button>
 									))}
 									{currentUserId && currentUserId === story.userId._id && (
-										<Button variant="ghost" size="icon" onClick={handleDelete} className="text-white hover:bg-white/10 h-8 w-8 sm:h-10 sm:w-10">
-											<Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-										</Button>
+										<motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+											<Button variant="ghost" size="icon" onClick={handleDelete} className="text-white hover:bg-white/10 h-8 w-8 sm:h-10 sm:w-10">
+												<Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+											</Button>
+										</motion.div>
 									)}
 								</div>
 

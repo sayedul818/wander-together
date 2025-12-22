@@ -16,6 +16,8 @@ interface Message {
   sender: { _id: string; name: string; avatar?: string };
   recipient: { _id: string; name: string; avatar?: string };
   content: string;
+  image?: string; // Story image attachment
+  storyId?: string; // Story reference
   read: boolean;
   createdAt: string;
 }
@@ -562,23 +564,40 @@ function MessagesContent() {
                       className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
                     >
                       <div
-                        className={`max-w-[70%] px-4 py-2 rounded-2xl ${
+                        className={`max-w-[70%] rounded-2xl overflow-hidden ${
                           isOwnMessage
                             ? 'bg-gradient-to-r from-orange-500 to-pink-500 text-white'
                             : 'bg-muted text-foreground'
                         }`}
                       >
-                        <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
-                        <p
-                          className={`text-xs mt-1 ${
-                            isOwnMessage ? 'text-orange-100' : 'text-muted-foreground'
-                          }`}
-                        >
-                          {new Date(msg.createdAt).toLocaleTimeString([], {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </p>
+                        {/* Story image if present */}
+                        {msg.image && (
+                          <div className="relative w-full aspect-[3/4] max-h-48">
+                            <Image
+                              src={msg.image}
+                              alt="Story"
+                              fill
+                              className="object-cover"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                            <div className="absolute bottom-2 left-2 text-xs text-white/80 flex items-center gap-1">
+                              <span className="bg-white/20 px-2 py-0.5 rounded-full backdrop-blur-sm">📸 Story reply</span>
+                            </div>
+                          </div>
+                        )}
+                        <div className="px-4 py-2">
+                          <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
+                          <p
+                            className={`text-xs mt-1 ${
+                              isOwnMessage ? 'text-orange-100' : 'text-muted-foreground'
+                            }`}
+                          >
+                            {new Date(msg.createdAt).toLocaleTimeString([], {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   );

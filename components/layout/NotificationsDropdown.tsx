@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from 'react';
-import { Bell, Loader2, Heart, MessageCircle, UserPlus, Share2, AtSign } from 'lucide-react';
+import { Bell, Loader2, Heart, MessageCircle, UserPlus, Share2, AtSign, Flame, Camera } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -16,9 +16,10 @@ import { toast } from 'sonner';
 
 interface NotificationItem {
   _id: string;
-  type: 'like' | 'comment' | 'follow' | 'share' | 'mention';
+  type: 'like' | 'comment' | 'follow' | 'share' | 'mention' | 'story_reaction' | 'story_reply';
   senderId: { _id: string; name: string; avatar?: string };
   postId?: string;
+  storyId?: string;
   read: boolean;
   createdAt: string;
   message?: string;
@@ -45,12 +46,19 @@ export function NotificationsDropdown() {
           .filter((n: NotificationItem) => newIds.includes(n._id))
           .forEach((n: NotificationItem) => {
             const senderName = n.senderId?.name || 'Someone';
-            const verb = n.type === 'like' ? 'liked your post' :
-                         n.type === 'comment' ? 'commented on your post' :
-                         n.type === 'follow' ? 'started following you' :
-                         n.type === 'share' ? 'shared your post' :
-                         'mentioned you';
-            toast(`${senderName} ${verb}`);
+            // Use the message from the notification if available
+            if (n.message) {
+              toast(n.message);
+            } else {
+              const verb = n.type === 'like' ? 'liked your post' :
+                           n.type === 'comment' ? 'commented on your post' :
+                           n.type === 'follow' ? 'started following you' :
+                           n.type === 'share' ? 'shared your post' :
+                           n.type === 'story_reaction' ? 'reacted to your story' :
+                           n.type === 'story_reply' ? 'replied to your story' :
+                           'mentioned you';
+              toast(`${senderName} ${verb}`);
+            }
           });
       }
       lastIdsRef.current = unread.map((n: NotificationItem) => n._id);
@@ -87,6 +95,10 @@ export function NotificationsDropdown() {
         return <Share2 className="h-3 w-3 text-purple-500" />;
       case 'mention':
         return <AtSign className="h-3 w-3 text-orange-500" />;
+      case 'story_reaction':
+        return <Flame className="h-3 w-3 text-orange-500" />;
+      case 'story_reply':
+        return <Camera className="h-3 w-3 text-pink-500" />;
       default:
         return <Bell className="h-3 w-3 text-muted-foreground" />;
     }
@@ -148,7 +160,7 @@ export function NotificationsDropdown() {
             {items.map((n) => (
               <DropdownMenuItem key={n._id} asChild className="py-3">
                 <Link 
-                  href={n.postId ? `/feed#post-${n.postId}` : `/profile/${n.senderId?._id}`} 
+                  href={n.storyId ? `/feed` : n.postId ? `/feed#post-${n.postId}` : `/profile/${n.senderId?._id}`} 
                   className="flex items-start gap-3"
                 >
                   <div className="relative flex-shrink-0">
@@ -166,11 +178,13 @@ export function NotificationsDropdown() {
                     <div className="text-sm leading-snug">
                       <span className="font-semibold">{n.senderId?.name || 'Someone'}</span>{' '}
                       <span className="text-muted-foreground">
-                        {n.message || (
+                        {n.message ? n.message.replace(n.senderId?.name || '', '').trim() : (
                           n.type === 'like' ? 'liked your post' :
                           n.type === 'comment' ? 'commented on your post' :
                           n.type === 'follow' ? 'started following you' :
                           n.type === 'share' ? 'shared your post' :
+                          n.type === 'story_reaction' ? 'reacted to your story' :
+                          n.type === 'story_reply' ? 'replied to your story' :
                           'mentioned you'
                         )}
                       </span>
