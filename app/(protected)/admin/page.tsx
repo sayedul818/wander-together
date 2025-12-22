@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { Users, MapPin, TrendingUp, LogOut, Loader2, ArrowLeft } from 'lucide-react';
+import { Users, MapPin, TrendingUp, LogOut, Loader2, ArrowLeft, Megaphone } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface DashboardStats {
@@ -217,6 +217,24 @@ export default function AdminDashboard() {
               </p>
               <Button className="gradient-sunset text-white">
                 Manage Trips →
+              </Button>
+            </div>
+          </Link>
+
+          {/* Sponsors Management */}
+          <Link href="/admin/sponsors">
+            <div className="card-surface rounded-lg shadow-sm border border-border p-8 hover:shadow-md transition cursor-pointer">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 bg-purple-100 dark:bg-purple-500/20 rounded-lg flex items-center justify-center">
+                  <Megaphone className="h-6 w-6 text-purple-600 dark:text-purple-300" />
+                </div>
+                <h3 className="text-xl font-bold text-foreground">Sponsors Management</h3>
+              </div>
+              <p className="text-muted-foreground mb-4">
+                Create and manage sponsored ads that appear in the feed sidebar.
+              </p>
+              <Button className="gradient-sunset text-white">
+                Manage Sponsors →
               </Button>
             </div>
           </Link>

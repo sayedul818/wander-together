@@ -1,21 +1,50 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Calendar, Flame, Globe, Sparkles, Users } from 'lucide-react';
+import { Calendar, Flame, Globe, Sparkles, Users, Loader2 } from 'lucide-react';
+
+interface Sponsor {
+	_id: string;
+	title: string;
+	description?: string;
+	image: string;
+	link: string;
+}
 
 export default function RightSidebar() {
-	const sponsored = [
-		{
-			title: 'Trek Patagonia',
-			image: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=800&auto=format&fit=crop',
-			href: '/explore',
-		},
-		{
-			title: 'Island Hopping Bali',
-			image: 'https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?q=80&w=800&auto=format&fit=crop',
-			href: '/explore',
-		},
-	];
+	const [sponsors, setSponsors] = useState<Sponsor[]>([]);
+	const [isLoadingSponsors, setIsLoadingSponsors] = useState(true);
+
+	useEffect(() => {
+		const fetchSponsors = async () => {
+			try {
+				const res = await fetch('/api/sponsors');
+				if (res.ok) {
+					const data = await res.json();
+					setSponsors(data.sponsors || []);
+				}
+			} catch (error) {
+				console.error('Error fetching sponsors:', error);
+			} finally {
+				setIsLoadingSponsors(false);
+			}
+		};
+
+		fetchSponsors();
+	}, []);
+
+	const trackClick = async (sponsorId: string) => {
+		try {
+			await fetch('/api/sponsors', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ sponsorId }),
+			});
+		} catch (error) {
+			// Silent fail for tracking
+		}
+	};
 
 	const trending = [
 		{ label: 'Visa-free gems', icon: Globe },
@@ -49,21 +78,37 @@ export default function RightSidebar() {
 					<h3 className="font-semibold">Sponsored</h3>
 				</div>
 				<div className="grid grid-cols-1 gap-3 p-3">
-					{sponsored.map((s) => (
-						<Link
-							key={s.title}
-							href={s.href}
-							className="block rounded-md overflow-hidden border border-border hover:shadow-sm transition"
-						>
-							<div className="h-28 bg-muted">
-								<img src={s.image} alt={s.title} className="w-full h-full object-cover" />
-							</div>
-							<div className="p-2 text-sm">
-								<p className="font-medium">{s.title}</p>
-								<p className="text-muted-foreground">Promoted</p>
-							</div>
-						</Link>
-					))}
+					{isLoadingSponsors ? (
+						<div className="flex items-center justify-center py-8">
+							<Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+						</div>
+					) : sponsors.length > 0 ? (
+						sponsors.map((s) => (
+							<a
+								key={s._id}
+								href={s.link}
+								target="_blank"
+								rel="noopener noreferrer"
+								onClick={() => trackClick(s._id)}
+								className="block rounded-md overflow-hidden border border-border hover:shadow-sm transition"
+							>
+								<div className="h-28 bg-muted">
+									<img src={s.image} alt={s.title} className="w-full h-full object-cover" />
+								</div>
+								<div className="p-2 text-sm">
+									<p className="font-medium">{s.title}</p>
+									{s.description && (
+										<p className="text-muted-foreground text-xs line-clamp-1">{s.description}</p>
+									)}
+									<p className="text-muted-foreground text-xs">Promoted</p>
+								</div>
+							</a>
+						))
+					) : (
+						<div className="text-center py-4 text-sm text-muted-foreground">
+							No sponsored content
+						</div>
+					)}
 				</div>
 			</section>
 
