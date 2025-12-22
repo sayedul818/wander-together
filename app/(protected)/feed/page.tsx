@@ -147,16 +147,21 @@ export default function FeedPage() {
     const currentY = e.touches[0].clientY;
     const distance = currentY - startY;
     
-    if (distance > 0 && window.scrollY === 0) {
+    // Only activate pull-to-refresh if scrolled to top and pulling down significantly
+    if (distance > 10 && window.scrollY === 0) {
       e.preventDefault();
-      setPullDistance(Math.min(distance, maxPullDistance));
+      // Apply resistance for smoother feel
+      const resistanceFactor = 0.5;
+      setPullDistance(Math.min(distance * resistanceFactor, maxPullDistance));
     }
   }, [startY, isPullRefreshing, maxPullDistance]);
 
   const handleTouchEnd = useCallback(() => {
+    // Only refresh if pulled past threshold
     if (pullDistance >= pullThreshold && !isPullRefreshing) {
       handleRefresh();
     } else {
+      // Smoothly reset if not past threshold
       setPullDistance(0);
     }
     setStartY(0);
