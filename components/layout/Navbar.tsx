@@ -121,6 +121,7 @@ export function Navbar() {
   ];
 
   // Desired order: Feed, Explore, Suggestions, Discover, Dashboard
+
   const leftLinks = user
     ? [
         { href: '/feed', label: 'Feed', icon: Heart },
@@ -129,28 +130,33 @@ export function Navbar() {
       ]
     : [
         { href: '/explore', label: 'Explore', icon: MapPin },
+        { href: '/about', label: 'About Us', icon: Info },
       ];
 
-    // Desktop links (without Suggestions)
-    const desktopLeftLinks = user
-      ? [
-          { href: '/feed', label: 'Feed', icon: Heart },
-          { href: '/explore', label: 'Explore', icon: MapPin },
-        ]
-      : [
-          { href: '/explore', label: 'Explore', icon: MapPin },
-        ];
 
-    // Mobile links (with Suggestions)
-    const mobileLeftLinks = user
-      ? [
-          { href: '/feed', label: 'Feed', icon: Heart },
-          { href: '/explore', label: 'Explore', icon: MapPin },
-          { href: '/suggestions', label: 'Suggestions', icon: Users },
-        ]
-      : [
-          { href: '/explore', label: 'Explore', icon: MapPin },
-        ];
+  // Desktop links (without Suggestions)
+  const desktopLeftLinks = user
+    ? [
+        { href: '/feed', label: 'Feed', icon: Heart },
+        { href: '/explore', label: 'Explore', icon: MapPin },
+      ]
+    : [
+        { href: '/explore', label: 'Explore', icon: MapPin },
+        { href: '/about', label: 'About Us', icon: Info },
+      ];
+
+
+  // Mobile links (with Suggestions)
+  const mobileLeftLinks = user
+    ? [
+        { href: '/feed', label: 'Feed', icon: Heart },
+        { href: '/explore', label: 'Explore', icon: MapPin },
+        { href: '/suggestions', label: 'Suggestions', icon: Users },
+      ]
+    : [
+        { href: '/explore', label: 'Explore', icon: MapPin },
+        { href: '/about', label: 'About Us', icon: Info },
+      ];
 
   const afterDiscoverLinks = user
     ? [
@@ -364,13 +370,7 @@ export function Navbar() {
             {/* Mobile navigation links before Discover */}
             <div className="space-y-1">
               <div className="px-4 text-xs uppercase tracking-wide text-muted-foreground font-semibold">Navigation</div>
-              {(user ? [
-                { href: '/feed', label: 'Feed', icon: Heart },
-                { href: '/explore', label: 'Explore', icon: MapPin },
-                { href: '/suggestions', label: 'Suggestions', icon: Users },
-              ] : [
-                { href: '/explore', label: 'Explore', icon: MapPin },
-              ]).map((link) => (
+              {mobileLeftLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}

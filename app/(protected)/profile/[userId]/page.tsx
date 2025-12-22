@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   MapPin, Heart, MessageCircle, Share2, UserPlus, UserCheck,
   Loader2, Image as ImageIcon, Compass, Award,
-  ThumbsUp, Send
+  ThumbsUp, Send, Calendar, Users, Globe
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -38,11 +38,26 @@ interface Post {
   comments?: any[];
 }
 
+interface Trip {
+  _id: string;
+  title: string;
+  description: string;
+  destination: string;
+  startDate: string;
+  endDate: string;
+  image?: string;
+  status: 'planning' | 'confirmed' | 'completed' | 'cancelled';
+  maxParticipants: number;
+  currentParticipants: number;
+  interests: string[];
+}
+
 export default function ProfilePage() {
   const params = useParams();
   const userId = (params?.userId as string) || '';
   const [user, setUser] = useState<User | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
+  const [trips, setTrips] = useState<Trip[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFollowing, setIsFollowing] = useState(false);
   const [activeTab, setActiveTab] = useState<'posts' | 'photos' | 'trips'>('posts');
@@ -81,6 +96,13 @@ export default function ProfilePage() {
           if (postsRes.ok) {
             const postsData = await postsRes.json();
             setPosts(postsData.posts || []);
+          }
+
+          // Fetch user trips
+          const tripsRes = await fetch(`/api/users/${userId}/trips`);
+          if (tripsRes.ok) {
+            const tripsData = await tripsRes.json();
+            setTrips(tripsData.trips || []);
           }
         }
       } catch (error) {
@@ -590,9 +612,85 @@ export default function ProfilePage() {
 
       {/* Trips Tab */}
       {activeTab === 'trips' && (
-        <div className="page-shell max-w-4xl mx-auto mb-12">
-          <div className="text-center py-12 text-muted-foreground">
-            Trips feature coming soon
+        <div className="page-shell max-w-2xl mx-auto mb-12">
+          <div className="space-y-4">
+            {trips.length === 0 ? (
+              <div className="card-surface p-12 text-center">
+                <Globe className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">No trips created yet.</p>
+              </div>
+            ) : (
+              trips.map((trip, i) => (
+                <motion.div
+                  key={trip._id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                >
+                  <Link href={`/travel-plans/${trip._id}`}>
+                    <div className="card-surface overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
+                      {trip.image && (
+                        <div className="h-48 relative">
+                          <Image
+                            src={trip.image}
+                            alt={trip.title}
+                            fill
+                            className="object-cover"
+                          />
+                          <div className="absolute top-3 right-3">
+                            <Badge className={`
+                              ${trip.status === 'planning' ? 'bg-yellow-500' : ''}
+                              ${trip.status === 'confirmed' ? 'bg-green-500' : ''}
+                              ${trip.status === 'completed' ? 'bg-blue-500' : ''}
+                              ${trip.status === 'cancelled' ? 'bg-red-500' : ''}
+                              text-white
+                            `}>
+                              {trip.status.charAt(0).toUpperCase() + trip.status.slice(1)}
+                            </Badge>
+                          </div>
+                        </div>
+                      )}
+                      <div className="p-4">
+                        <h3 className="font-semibold text-lg mb-1">{trip.title}</h3>
+                        <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
+                          <MapPin className="h-4 w-4" />
+                          <span>{trip.destination}</span>
+                        </div>
+                        <div className="flex items-center gap-4 text-muted-foreground text-sm mb-3">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-4 w-4" />
+                            <span>
+                              {new Date(trip.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                              {' - '}
+                              {new Date(trip.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Users className="h-4 w-4" />
+                            <span>{trip.currentParticipants}/{trip.maxParticipants}</span>
+                          </div>
+                        </div>
+                        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{trip.description}</p>
+                        {trip.interests && trip.interests.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {trip.interests.slice(0, 3).map((interest) => (
+                              <Badge key={interest} variant="secondary" className="text-xs">
+                                {interest}
+                              </Badge>
+                            ))}
+                            {trip.interests.length > 3 && (
+                              <Badge variant="secondary" className="text-xs">
+                                +{trip.interests.length - 3}
+                              </Badge>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))
+            )}
           </div>
         </div>
       )}

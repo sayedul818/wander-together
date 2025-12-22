@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LogOut, Settings, Edit3, Upload, MapPin, Compass,
   Award, Heart, MessageCircle, Share2, Loader2, MoreVertical,
-  Pencil, Trash2, Flag, X
+  Pencil, Trash2, Flag, X, Calendar, Users, Globe
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -58,6 +58,20 @@ interface Post {
   createdAt: string;
 }
 
+interface Trip {
+  _id: string;
+  title: string;
+  description: string;
+  destination: string;
+  startDate: string;
+  endDate: string;
+  image?: string;
+  status: 'planning' | 'confirmed' | 'completed' | 'cancelled';
+  maxParticipants: number;
+  currentParticipants: number;
+  interests: string[];
+}
+
 const INTERESTS = [
   'Adventure', 'Beach', 'Culture', 'Food', 'History', 'Nature',
   'Photography', 'Hiking', 'Shopping', 'Art', 'Music', 'Sports',
@@ -68,9 +82,10 @@ export default function MyProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
+  const [trips, setTrips] = useState<Trip[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'posts' | 'photos' | 'about'>('posts');
+  const [activeTab, setActiveTab] = useState<'posts' | 'trips' | 'photos' | 'about'>('posts');
   const [isUploading, setIsUploading] = useState(false);
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState<string>('');
@@ -112,6 +127,13 @@ export default function MyProfilePage() {
             if (postsRes.ok) {
               const postsData = await postsRes.json();
               setPosts(postsData.posts || []);
+            }
+
+            // Fetch user trips
+            const tripsRes = await fetch(`/api/users/${userData.user._id}/trips`);
+            if (tripsRes.ok) {
+              const tripsData = await tripsRes.json();
+              setTrips(tripsData.trips || []);
             }
           }
         }
@@ -648,7 +670,7 @@ export default function MyProfilePage() {
           animate={{ opacity: 1 }}
           className="flex gap-1 border-b border-border"
         >
-          {['posts', 'photos', 'about'].map((tab) => (
+          {['posts', 'trips', 'photos', 'about'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab as any)}
@@ -971,6 +993,91 @@ export default function MyProfilePage() {
                       <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground">Share</span>
                     </button>
                   </div>
+                </motion.div>
+              ))
+            )}
+          </div>
+        )}
+
+        {activeTab === 'trips' && (
+          <div className="space-y-4">
+            {trips.length === 0 ? (
+              <div className="card-surface p-12 text-center">
+                <Globe className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">No trips created yet. Start planning your adventure!</p>
+                <Button className="mt-4 gradient-sunset text-white" asChild>
+                  <Link href="/travel-plans/add">Create Trip</Link>
+                </Button>
+              </div>
+            ) : (
+              trips.map((trip, i) => (
+                <motion.div
+                  key={trip._id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                >
+                  <Link href={`/travel-plans/${trip._id}`}>
+                    <div className="card-surface overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
+                      {trip.image && (
+                        <div className="h-48 relative">
+                          <Image
+                            src={trip.image}
+                            alt={trip.title}
+                            fill
+                            className="object-cover"
+                          />
+                          <div className="absolute top-3 right-3">
+                            <Badge className={`
+                              ${trip.status === 'planning' ? 'bg-yellow-500' : ''}
+                              ${trip.status === 'confirmed' ? 'bg-green-500' : ''}
+                              ${trip.status === 'completed' ? 'bg-blue-500' : ''}
+                              ${trip.status === 'cancelled' ? 'bg-red-500' : ''}
+                              text-white
+                            `}>
+                              {trip.status.charAt(0).toUpperCase() + trip.status.slice(1)}
+                            </Badge>
+                          </div>
+                        </div>
+                      )}
+                      <div className="p-4">
+                        <h3 className="font-semibold text-lg mb-1">{trip.title}</h3>
+                        <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
+                          <MapPin className="h-4 w-4" />
+                          <span>{trip.destination}</span>
+                        </div>
+                        <div className="flex items-center gap-4 text-muted-foreground text-sm mb-3">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-4 w-4" />
+                            <span>
+                              {new Date(trip.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                              {' - '}
+                              {new Date(trip.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Users className="h-4 w-4" />
+                            <span>{trip.currentParticipants}/{trip.maxParticipants}</span>
+                          </div>
+                        </div>
+                        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{trip.description}</p>
+                        {trip.interests && trip.interests.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {trip.interests.slice(0, 3).map((interest) => (
+                              <Badge key={interest} variant="secondary" className="text-xs">
+                                {interest}
+                              </Badge>
+                            ))}
+                            {trip.interests.length > 3 && (
+                              <Badge variant="secondary" className="text-xs">
+                                +{trip.interests.length - 3}
+                              </Badge>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
                 </motion.div>
               ))
             )}

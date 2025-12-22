@@ -86,21 +86,29 @@ const sampleConversation = [
   },
 ];
 
-const stats = [
-  { value: '50K+', label: 'Active Travelers' },
-  { value: '120+', label: 'Countries' },
-  { value: '15K+', label: 'Trips Matched' },
-  { value: '4.9', label: 'Average Rating' },
-];
+interface PlatformStats {
+  activeTravelers: { value: string; raw: number };
+  countries: { value: string; raw: number };
+  tripsMatched: { value: string; raw: number };
+  averageRating: { value: string; raw: number };
+}
 
 export default function Home() {
   const [destinations, setDestinations] = useState<any[]>([]);
   const [topTravelers, setTopTravelers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [platformStats, setPlatformStats] = useState<PlatformStats | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Fetch platform stats
+        const statsRes = await fetch('/api/platform/stats');
+        if (statsRes.ok) {
+          const statsData = await statsRes.json();
+          setPlatformStats(statsData.stats);
+        }
+
         // Fetch travel plans for destinations
         const plansRes = await fetch('/api/travel-plans?limit=100');
         if (plansRes.ok) {
@@ -200,7 +208,7 @@ export default function Home() {
             >
               <Badge className="mb-6 gradient-sunset text-primary-foreground px-4 py-1.5">
                 <Globe className="h-3.5 w-3.5 mr-1" />
-                Join 50,000+ travelers worldwide
+                Join {platformStats?.activeTravelers.value || ''} travelers worldwide
               </Badge>
             </motion.div>
 
@@ -299,7 +307,12 @@ export default function Home() {
       {/* Stats Section */}
       <section className="section-shell border-y border-border/50 bg-card/50">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          {stats.map((stat, i) => (
+          {[
+            { value: platformStats?.activeTravelers.value || '0+', label: 'Active Travelers' },
+            { value: platformStats?.countries.value || '0+', label: 'Countries' },
+            { value: platformStats?.tripsMatched.value || '0+', label: 'Trips Matched' },
+            { value: platformStats?.averageRating.value || 'N/A', label: 'Average Rating' },
+          ].map((stat, i) => (
             <motion.div
               key={stat.label}
               initial={{ opacity: 0, y: 20 }}
@@ -565,6 +578,67 @@ export default function Home() {
         </div>
       </section>
 
+      {/* --- Social Features Overview Section --- */}
+      <section className="section-shell bg-card/60 border-y border-border/50 mt-12">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center mb-12"
+        >
+          <Badge variant="secondary" className="mb-4">Platform Features</Badge>
+          <h2 className="font-heading text-3xl md:text-4xl font-bold text-foreground mb-4">
+            Discover All Our Social Features
+          </h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            TripBuddyGo is more than just messaging—explore our interactive social features designed to help you build your travel network and stay inspired.
+          </p>
+        </motion.div>
+        <div className="grid md:grid-cols-3 gap-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0 }}
+            className="bg-background rounded-2xl border border-border/50 p-6 text-center hover-lift"
+          >
+            <Globe className="h-10 w-10 mx-auto mb-4 text-coral" />
+            <h3 className="font-heading font-semibold text-foreground mb-2">Personalized Feed</h3>
+            <p className="text-muted-foreground text-sm">See updates, stories, and posts from travelers you follow. Stay inspired by real journeys and tips.</p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="bg-background rounded-2xl border border-border/50 p-6 text-center hover-lift"
+          >
+            <Users className="h-10 w-10 mx-auto mb-4 text-teal" />
+            <h3 className="font-heading font-semibold text-foreground mb-2">Follow & Unfollow</h3>
+            <p className="text-muted-foreground text-sm">Curate your network by following travelers you admire and unfollowing at any time. Build your own travel community.</p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="bg-background rounded-2xl border border-border/50 p-6 text-center hover-lift"
+          >
+            <Sparkles className="h-10 w-10 mx-auto mb-4 text-yellow-400" />
+            <h3 className="font-heading font-semibold text-foreground mb-2">Real-Time Interactions</h3>
+            <p className="text-muted-foreground text-sm">Instant notifications, live updates, and interactive features keep you connected and engaged with your travel circle.</p>
+          </motion.div>
+        </div>
+        <div className="text-center mt-10">
+          <Button variant="outline" size="lg" asChild>
+            <Link href="/feed">
+              Explore the Feed
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Link>
+          </Button>
+        </div>
+      </section>
+
       {/* Featured Travelers */}
       <section className="section-shell">
         <motion.div
@@ -708,7 +782,7 @@ export default function Home() {
                 { icon: Shield, text: 'Verified profiles and secure messaging' },
                 { icon: Users, text: 'Smart matching based on interests and travel style' },
                 { icon: Camera, text: 'Share photos and experiences with your matches' },
-                { icon: Globe, text: 'Connect with travelers from 120+ countries' },
+                { icon: Globe, text: `Connect with travelers from ${platformStats?.countries.value || '0+'} countries` },
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-lg bg-secondary flex items-center justify-center">

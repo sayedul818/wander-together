@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
+
+import { getToken, verifyToken } from '@/lib/auth';
+
 
 export async function middleware(request: NextRequest) {
-  const session = await getSession();
+  // Get token from request (works for both local and Vercel edge environments)
+  const token = getToken(request);
+  const session = await verifyToken(token);
   const pathname = request.nextUrl.pathname;
 
   // Protected routes that require authentication

@@ -48,7 +48,8 @@ export default function LeftSidebar() {
 	};
 
 	return (
-		<aside className="sticky top-16 space-y-4">
+		<aside className="sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+			<div className="space-y-4 pb-4">
 			{/* Mobile-only Discover button */}
 			<nav aria-label="Mobile Only" className="block lg:hidden bg-card border border-border rounded-lg p-3">
 				<ul className="space-y-1">
@@ -116,6 +117,7 @@ export default function LeftSidebar() {
 
 			{/* Follow Suggestions */}
 			<FollowSuggestions title="Suggestions" titleHref="/suggestions" limit={6} />
+			</div>
 		</aside>
 	);
 }
