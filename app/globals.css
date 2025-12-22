@@ -120,3 +120,14 @@
     @apply bg-card text-card-foreground border border-border/50 rounded-2xl shadow-sm;
   }
 }
+
+@layer utilities {
+  /* Hide native scrollbars while keeping scroll behavior */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+}

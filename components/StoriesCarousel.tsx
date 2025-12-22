@@ -106,20 +106,20 @@ export default function StoriesCarousel() {
         </Button>
       </div>
 
-      <div className="relative overflow-x-auto px-4 py-4">
+      <div className="relative overflow-x-auto no-scrollbar px-4 py-4">
         <div className="flex gap-3">
           <button
             onClick={() => setCreateOpen(true)}
-            className="group relative flex h-32 w-24 flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed border-border/60 bg-muted text-foreground shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+            className="group relative flex h-28 w-24 sm:h-32 sm:w-28 md:h-36 md:w-32 flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed border-border/60 bg-muted text-foreground shadow-sm transition hover:-translate-y-0.5 hover:shadow-md shrink-0"
           >
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-card shadow">
+            <div className="flex h-10 w-10 sm:h-11 sm:w-11 md:h-12 md:w-12 items-center justify-center rounded-full bg-card shadow">
               <Plus className="h-5 w-5" />
             </div>
             <span className="mt-2 text-xs font-semibold">Add Story</span>
           </button>
 
           {isLoading && (
-            <div className="flex h-32 w-full items-center justify-center text-muted-foreground">
+            <div className="flex h-28 sm:h-32 md:h-36 w-full items-center justify-center text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin" />
             </div>
           )}
@@ -130,13 +130,13 @@ export default function StoriesCarousel() {
               return (
                 <div
                   key={first._id}
-                  className="group relative h-32 w-24 shrink-0 cursor-pointer overflow-hidden rounded-2xl bg-slate-900 text-white shadow-md transition hover:-translate-y-1 hover:shadow-lg"
+                  className="group relative h-28 w-24 sm:h-32 sm:w-28 md:h-36 md:w-32 shrink-0 cursor-pointer overflow-hidden rounded-2xl bg-slate-900 text-white shadow-md transition hover:-translate-y-1 hover:shadow-lg"
                   onClick={() => handleOpenViewer(first._id)}
                 >
-                  <Image src={first.image} alt={group.userId.name} fill className="object-cover" sizes="(max-width: 640px) 80px, 96px" />
+                  <Image src={first.image} alt={group.userId.name} fill className="object-cover" sizes="(max-width: 640px) 96px, (max-width: 768px) 112px, 128px" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
                   <div className="absolute left-2 top-2">
-                    <Avatar className="h-9 w-9 ring-2 ring-white">
+                    <Avatar className="h-10 w-10 sm:h-11 sm:w-11 md:h-12 md:w-12 ring-2 ring-white">
                       <AvatarImage src={group.userId.avatar} />
                       <AvatarFallback>{group.userId.name?.charAt(0) || 'U'}</AvatarFallback>
                     </Avatar>
