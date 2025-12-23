@@ -510,8 +510,8 @@ function MessagesContent() {
 
         {/* Chat Area - Shows when user is selected */}
         {userId && selectedUser && (
-          <div 
-            className="flex-1 flex flex-col bg-background rounded-none lg:rounded-r-xl overflow-hidden min-h-0 fixed lg:static top-16 lg:top-auto bottom-0 left-0 right-0 lg:inset-auto z-40"
+          <div
+            className="flex-1 flex flex-col bg-background rounded-none lg:rounded-r-xl overflow-hidden min-h-0 z-40"
           >
             {/* Chat Header */}
             <div className="flex items-center gap-3 p-4 border-b border-border bg-card flex-shrink-0">
@@ -607,13 +607,15 @@ function MessagesContent() {
             </div>
 
             {/* Input Area - Fixed on mobile, relative on desktop */}
-            <div 
+            <div
               ref={inputContainerRef}
-              className="border-t border-border p-4 bg-card flex-shrink-0 fixed lg:static bottom-0 left-0 right-0 w-full lg:w-auto lg:bottom-auto z-50"
+              className="border-t border-border bg-card flex-shrink-0 w-full z-50"
               style={{
                 transform: `translateY(-${Math.max(0, keyboardHeight)}px)`,
                 transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                paddingBottom: window !== undefined && window.innerWidth < 1024 ? 'calc(1rem + max(0px, env(safe-area-inset-bottom)))' : '1rem'
+                padding: '1rem env(safe-area-inset-right) calc(1rem + env(safe-area-inset-bottom)) env(safe-area-inset-left)',
+                background: 'var(--card)',
+                maxWidth: '100vw',
               }}
             >
               <form onSubmit={handleSendMessage} className="flex gap-2">
@@ -622,6 +624,9 @@ function MessagesContent() {
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Type your message..."
                   className="flex-1 min-h-[60px] max-h-32 resize-none"
+                  style={{
+                    WebkitOverflowScrolling: 'touch',
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
@@ -633,6 +638,7 @@ function MessagesContent() {
                   type="submit"
                   disabled={isSending || !newMessage.trim()}
                   className="gradient-sunset text-white self-end"
+                  style={{ minHeight: 48 }}
                 >
                   {isSending ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -648,10 +654,14 @@ function MessagesContent() {
         {/* Empty State for desktop when no conversation selected */}
         {!userId && (
           <div className="flex-1 hidden lg:flex items-center justify-center text-center p-8 bg-muted/20 rounded-r-xl">
-            <div>
-              <MessageCircle className="h-20 w-20 mx-auto mb-4 text-muted-foreground opacity-50" />
-              <h3 className="text-xl font-semibold text-foreground mb-2">Select a conversation</h3>
-              <p className="text-muted-foreground">Choose a conversation from the sidebar to start messaging</p>
+            <div
+              ref={messagesContainerRef}
+              className="flex-1 overflow-y-auto p-4 space-y-3 pb-24 lg:pb-3 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-muted-foreground"
+              style={{
+                paddingBottom: 'calc(6.5rem + env(safe-area-inset-bottom))',
+                // 6.5rem = input bar + extra space for mobile
+              }}
+            >
             </div>
           </div>
         )}

@@ -50,7 +50,9 @@ export async function GET(req: NextRequest) {
       const conversationsMap = new Map();
 
       sentMessages.forEach(msg => {
-        const userId = (msg.recipient as any)._id.toString();
+        if (!msg.recipient) return; // skip if recipient is missing
+        const userId = (msg.recipient as any)._id?.toString();
+        if (!userId) return;
         if (!conversationsMap.has(userId)) {
           conversationsMap.set(userId, {
             user: msg.recipient,
@@ -62,7 +64,9 @@ export async function GET(req: NextRequest) {
       });
 
       receivedMessages.forEach(msg => {
-        const userId = (msg.sender as any)._id.toString();
+        if (!msg.sender) return; // skip if sender is missing
+        const userId = (msg.sender as any)._id?.toString();
+        if (!userId) return;
         const existing = conversationsMap.get(userId);
         if (!existing || new Date(msg.createdAt) > new Date(existing.lastMessageTime)) {
           conversationsMap.set(userId, {
@@ -74,7 +78,9 @@ export async function GET(req: NextRequest) {
         }
         if (!msg.read) {
           const current = conversationsMap.get(userId);
-          current.unreadCount = (current.unreadCount || 0) + 1;
+          if (current) {
+            current.unreadCount = (current.unreadCount || 0) + 1;
+          }
         }
       });
 
