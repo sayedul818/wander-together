@@ -59,6 +59,7 @@ export default function FeedPage() {
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const latestPageRef = useRef(1);
   const [postContent, setPostContent] = useState('');
   const [isPosting, setIsPosting] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
@@ -100,18 +101,22 @@ export default function FeedPage() {
   ];
 
   const fetchPosts = useCallback(async (pageNum: number) => {
+    latestPageRef.current = pageNum;
     try {
       setIsLoading(true);
       // Default to Following feed for logged-in users
       const res = await fetch(`/api/posts?scope=following&page=${pageNum}&limit=10`);
       if (res.ok) {
         const data = await res.json();
-        if (pageNum === 1) {
-          setPosts(data.posts);
-        } else {
-          setPosts((prev) => [...prev, ...data.posts]);
+        // Only update posts if this is the latest requested page
+        if (latestPageRef.current === pageNum) {
+          if (pageNum === 1) {
+            setPosts(data.posts);
+          } else {
+            setPosts((prev) => [...prev, ...data.posts]);
+          }
+          setHasMore(pageNum < data.pages);
         }
-        setHasMore(pageNum < data.pages);
       }
     } catch (error) {
       console.error('Error fetching posts:', error);
