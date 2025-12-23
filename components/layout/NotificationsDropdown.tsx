@@ -123,8 +123,8 @@ export function NotificationsDropdown() {
 
   return (
     <DropdownMenu open={open} onOpenChange={(v) => {
+      if (!v) markAllRead();
       setOpen(v);
-      if (v) markAllRead();
     }}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" className="relative">

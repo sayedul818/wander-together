@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { Plus, Loader2 } from 'lucide-react';
+import { StoriesSkeleton } from '@/components/skeletons/FeedSidebarSkeletons';
 import StoryCreateModal from './StoryCreateModal';
 import StoryViewerModal from './StoryViewerModal';
 import { Button } from '@/components/ui/button';
@@ -118,11 +119,7 @@ export default function StoriesCarousel() {
             <span className="mt-2 text-xs font-semibold">Add Story</span>
           </button>
 
-          {isLoading && (
-            <div className="flex h-28 sm:h-32 md:h-36 w-full items-center justify-center text-muted-foreground">
-              <Loader2 className="h-5 w-5 animate-spin" />
-            </div>
-          )}
+          {isLoading && <StoriesSkeleton count={6} />}
 
           {!isLoading &&
             cards.map((group) => {

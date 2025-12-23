@@ -8,6 +8,7 @@ import {
   ThumbsUp, Smile, PartyPopper, Plane, Frown, Angry, X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { PostSkeleton, PostSkeletonList } from '@/components/skeletons/PostSkeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import Image from 'next/image';
@@ -881,8 +882,8 @@ export default function FeedPage() {
             ))}
 
             {isLoading && (
-              <div className="flex justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-secondary" />
+              <div className="py-8">
+                <PostSkeletonList count={3} />
               </div>
             )}
 

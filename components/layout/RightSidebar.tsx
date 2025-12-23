@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Calendar, Flame, Globe, Sparkles, Users, Loader2, MapPin, TrendingUp, Trophy } from 'lucide-react';
+import { SponsorSkeleton, DestinationSkeleton, TripSkeleton, TravelerSkeleton } from '@/components/skeletons/FeedSidebarSkeletons';
 
 interface Sponsor {
 	_id: string;
@@ -163,11 +164,9 @@ export default function RightSidebar() {
 					<h3 className="font-semibold">Sponsored</h3>
 				</div>
 				<div className="grid grid-cols-1 gap-3 p-3">
-					{isLoadingSponsors ? (
-						<div className="flex items-center justify-center py-8">
-							<Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-						</div>
-					) : sponsors.length > 0 ? (
+					   {isLoadingSponsors ? (
+						   <SponsorSkeleton count={2} />
+					   ) : sponsors.length > 0 ? (
 						sponsors.map((s) => (
 							<a
 								key={s._id}
@@ -203,11 +202,9 @@ export default function RightSidebar() {
 					<TrendingUp className="h-4 w-4 text-orange-500" />
 					<h3 className="font-semibold">Popular Destinations</h3>
 				</div>
-				{isLoadingDestinations ? (
-					<div className="flex items-center justify-center py-8">
-						<Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-					</div>
-				) : (
+				   {isLoadingDestinations ? (
+					   <DestinationSkeleton count={4} />
+				   ) : (
 					<ul className="space-y-2 text-sm">
 						{popularDestinations.map((dest, index) => (
 							<li 
@@ -255,11 +252,9 @@ export default function RightSidebar() {
 					<Calendar className="h-4 w-4 text-blue-500" />
 					<h3 className="font-semibold">Upcoming Trips</h3>
 				</div>
-				{isLoadingUpcoming ? (
-					<div className="flex items-center justify-center py-6">
-						<Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-					</div>
-				) : upcomingTrips.length > 0 ? (
+				   {isLoadingUpcoming ? (
+					   <TripSkeleton count={3} />
+				   ) : upcomingTrips.length > 0 ? (
 					<ul className="space-y-2 text-sm">
 						{upcomingTrips.map((trip) => (
 							<li key={trip._id}>
@@ -297,11 +292,9 @@ export default function RightSidebar() {
 					<Trophy className="h-4 w-4 text-yellow-500" />
 					<h3 className="font-semibold">Top Travelers</h3>
 				</div>
-				{isLoadingTravelers ? (
-					<div className="flex items-center justify-center py-8">
-						<Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-					</div>
-				) : topTravelers.length > 0 ? (
+				   {isLoadingTravelers ? (
+					   <TravelerSkeleton count={4} />
+				   ) : topTravelers.length > 0 ? (
 					<ul className="space-y-3 text-sm">
 						{topTravelers.map((traveler, index) => (
 							<li key={traveler._id}>
